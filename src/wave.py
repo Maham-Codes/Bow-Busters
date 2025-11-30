@@ -1,6 +1,6 @@
 import pygame
 import random
-from core.enemy import Enemy
+from src.enemy import Enemy
 
 
 class Wave:
