@@ -37,10 +37,9 @@ class Defence(Prefab):
 
     def update(self, delta):
         """
-        In this Called once each frame.
+        it called once each frame.
         Updates targeting and launches attacks.
-        Args:
-            delta (float): The time (seconds) since the last update.
+        Args:delta (float): The time (seconds) since the last update.
 
         """
         # Defences such as walls have no attack,
@@ -89,3 +88,67 @@ class Defence(Prefab):
 
             self.rect = self.image.get_rect()
             self.rect.center = center
+
+    def get_target(self):
+        """
+        Attempts to find a suitable target.
+        Returns:
+            (int, int) The position of the target, if found.
+            Otherwise returns None.
+        """
+        if self.target is not None and self.is_target_suitable(self.target):
+            return self.target.rect.center
+
+        for t in self.game.wave.enemies:
+            if self.is_target_suitable(t):
+                self.target = t
+                return t.rect.center
+
+        return None
+
+    def is_target_suitable(self, target):
+        """
+        Calculates if a target can be shot at.
+        Args:
+            target (Enemy): The target being tried.
+        Returns 
+            True if the target can be hit, otherwise false.
+        """
+        if target not in self.game.wave.enemies:
+            return False
+
+        a = target.rect.center
+        b = self.rect.center
+        sqrdist = (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
+
+        return sqrdist <= self.attack_range ** 2
+
+
+class DefenceFlash(Prefab):
+    """
+    A flash effect displayed when some defences attack.
+    """
+
+    def __init__(self, defence_position, target, offset):
+        """
+        Constructor.
+        Args:
+            defence_position (int, int): The centre of the defence.
+            target (int, int): The centre of the target.
+            offset (float): The distance from the defence_position to the flash.
+        """
+        dx = target[0] - defence_position[0]
+        dy = target[1] - defence_position[1]
+        magnitude = math.sqrt(dx * dx + dy * dy)
+        dx *= (offset / magnitude)
+        dy *= (offset / magnitude)
+
+        super().__init__("defence_flash", defence_position[0] + dx - 16, defence_position[1] + dy - 16)
+
+    def update(self, delta):
+        """
+        Called each frame. Updates the graphic.
+        Args:
+            delta (float): The time since the last update.
+        """
+        super().update_animation(delta)
