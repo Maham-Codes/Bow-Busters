@@ -36,3 +36,34 @@ class Bullet(Prefab):
         self.image = pygame.transform.rotate(self.image, angle)
         self.rect = self.image.get_rect()
         self.rect.center = origin
+
+    def update(self, delta):
+        """ 
+        Moves the bullet once per frame. 
+        
+        Args:
+            delta (float): The time (seconds) since the last update.
+
+        """
+        self.rect.x += self.xSpeed * delta
+        self.rect.y += self.ySpeed * delta
+
+        # Lifetime
+        self.current_life += delta
+        if self.life < self.current_life:
+            self.kill()
+
+        # Collisions with scene
+        if self.current_life > 0.03 and self.game.level.collision.point_blocked(self.rect.centerx, self.rect.centery):
+            self.kill()
+
+        # Collisions with enemies
+        for enemy in self.game.wave.enemies:
+            dx = enemy.rect.centerx - self.rect.centerx
+            dy = enemy.rect.centery - self.rect.centery
+            sqrMagnitude = (dx ** 2) + (dy ** 2)
+
+            if sqrMagnitude < (enemy.rect.width / 2) ** 2:
+                enemy.take_damage(self.damage)
+                self.kill()
+                return
