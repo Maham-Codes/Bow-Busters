@@ -1,7 +1,7 @@
 import math
 import random
 import pygame
-from core.prefab import Prefab
+from src.prefab import Prefab
 
 
 class Bullet(Prefab):
