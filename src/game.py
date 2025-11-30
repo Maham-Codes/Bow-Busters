@@ -15,30 +15,28 @@ class Game:
     """
 
     def __init__(self, window):
-        """ 
-        Constructor. 
-        
-        Args:
-            window (Window): The window instance to render to.
-
-        """
+        """ Constructor """
         self.window = window
         self.clock = pygame.time.Clock()
         self.defences = pygame.sprite.Group()
         self.bullets = pygame.sprite.Group()
         self.explosions = pygame.sprite.Group()
+
+        # Load level
         self.load_level("path")
+
+        # Tower types
         self.defence_type = 0
-        self.defence_prototypes = [Defence(self, "defence_" + name, -100, -100) for name in ["pillbox", "wall", "mines", "artillery"]]
+        self.defence_prototypes = [
+            Defence(self, "defence_" + name, -100, -100)
+            for name in ["pillbox", "wall", "mines", "artillery"]
+        ]
+
+        # Leaderboard is now handled by Menu class
+        # No need to initialize here since Menu creates its own instance
 
     def load_level(self, name):
-        """
-        Loads a new level.
-
-        Args:
-            name (str): The name of the level (case sensitive).
-
-        """
+        """ Loads a new level. """
         self.defences.empty()
         self.bullets.empty()
         self.explosions.empty()
@@ -47,15 +45,13 @@ class Game:
         self.menu = Menu(self)
 
     def run(self):
-        """ 
-        Runs the main game loop. 
-        """
+        """ Runs the main game loop. """
         self.running = True
 
         while self.running:
             delta = self.clock.tick(60) / 1000.0
 
-            # Look for a quit event
+            # Input event handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.quit()
@@ -66,7 +62,7 @@ class Game:
                 elif event.type == pygame.KEYDOWN:
                     self.menu.key_pressed(event.key)
 
-            # Call update functions
+            # Update systems
             self.menu.update()
             self.level.pathfinding.update()
 
@@ -80,7 +76,7 @@ class Game:
                 if self.wave.done:
                     self.wave = Wave(self, self.wave.number + 1)
 
-            # Redraw graphics
+            # Redraw
             self.window.clear()
             self.level.prefabs.draw(self.window.screen)
             self.defences.draw(self.window.screen)
@@ -93,26 +89,15 @@ class Game:
         """
         Quits and closes the game.
         """
+        # Scores are automatically saved when game ends (in Menu.show_lose_screen)
         self.running = False
 
     def select_defence(self, type):
-        """
-        Picks a defence type for placement.
-
-        Args:
-            type (int): The index of the selcted defence type.
-
-        """
+        """ Select defence type. """
         self.defence_type = type
 
     def place_defence(self, position):
-        """
-        Attempts to place a defence at the given position.
-
-        Args:
-            position (int, int): The intended coordinates of the defence.
-
-        """
+        """ Place a defence tower. """
         if self.defence_type < 0:
             return
 
@@ -124,11 +109,11 @@ class Game:
         x = position[0] - position[0] % 32
         y = position[1] - position[1] % 32
 
-        # Stop if the defence would intersect with the level.
+        # Level collision check
         if self.level.collision.rect_blocked(x, y, defence.rect.width - 2, defence.rect.height - 2):
             return
 
-        # Stop if the defence may lead no path for enemies.
+        # Critical path (cannot block path)
         if hasattr(defence, "block") and self.level.pathfinding.is_critical((x, y)):
             return
 
