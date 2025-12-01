@@ -3,6 +3,35 @@ from core.leaderboard import Leaderboard
 from pygame.sprite import OrderedUpdates
 import pygame
 import math
+import os
+
+
+LEADERBOARD_ASSET_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "textures"))
+TROPHY_ICON_SIZE = (32, 32)
+
+
+def _load_trophy_texture(filename):
+    """
+    Loads and scales a trophy texture located inside textures/.
+    """
+    path = os.path.join(LEADERBOARD_ASSET_DIR, filename)
+    if not os.path.exists(path):
+        print(f"Warning: missing leaderboard trophy asset '{filename}' in textures/")
+        return None
+    try:
+        surface = pygame.image.load(path).convert_alpha()
+        if TROPHY_ICON_SIZE is not None:
+            surface = pygame.transform.smoothscale(surface, TROPHY_ICON_SIZE)
+        return surface
+    except Exception as exc:
+        print(f"Warning: failed to load trophy asset '{filename}': {exc}")
+        return None
+
+
+TROPHY_GOLD = _load_trophy_texture("trophy_gold.png")
+TROPHY_SILVER = _load_trophy_texture("trophy_silver.png")
+TROPHY_BRONZE = _load_trophy_texture("trophy_bronze.png")
+TROPHY_SURFACES = [TROPHY_GOLD, TROPHY_SILVER, TROPHY_BRONZE]
 
 
 class Menu(Prefab):
@@ -125,7 +154,7 @@ class Menu(Prefab):
 
         self.components.draw(screen)
 
-    def add_button(self, text, callback, tint=None):
+    def add_button(self, text, callback, tint=None, icon=None):
         """
         Adds a standard button to the menu screen.
 
@@ -133,6 +162,7 @@ class Menu(Prefab):
             text (str): The text to display on the button.
             callback (callable): The callback when the button is clicked.
             tint (tuple|None): Optional (R, G, B) tint colour for the button background.
+            icon (Surface|None): Optional icon surface to render before the text.
 
         Returns:
             (MenuButton): The button.
@@ -140,10 +170,15 @@ class Menu(Prefab):
         """
         button = MenuButton(self, "menu_button", text, 0, self.component_next, callback)
 
-        # Optionally colour‑code the button background (used by leaderboard)
+        # Optionally customise the button background/icon (used by leaderboard)
+        customised = False
         if tint is not None:
             button.tint = tint
-            # Force the label to rebuild its image with the tint
+            customised = True
+        if icon is not None:
+            button.icon_surface = icon
+            customised = True
+        if customised:
             img = button.image_template
             button.image_template = None
             button.set_image(img)
@@ -229,12 +264,13 @@ class Menu(Prefab):
         elif len(self.leaderboard.entries) == 0:
             self.add_button("No scores yet", None)
         else:
-            # Show all entries with only name and score, colour‑coding top 3
+            # Show all entries with only name and score, colour‑coding top 3 and adding trophies
             for index, entry in enumerate(self.leaderboard.entries):
                 text = entry.name + " - " + str(entry.score)
 
                 # Default: no tint
                 tint = None
+                icon = TROPHY_SURFACES[index] if index < len(TROPHY_SURFACES) else None
                 if index == 0:
                     # Gold
                     tint = (255, 215, 0)
@@ -245,7 +281,7 @@ class Menu(Prefab):
                     # Bronze
                     tint = (205, 127, 50)
 
-                self.add_button(text, None, tint=tint)
+                self.add_button(text, None, tint=tint, icon=icon)
 
     def show_lose_screen(self):
         """
@@ -324,6 +360,8 @@ class MenuLabel(Prefab):
         self.highlighted = False
         self.selected = False
         self.disabled = False
+        self.tint = None
+        self.icon_surface = None
         self.set_image(self.image_s)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -396,8 +434,19 @@ class MenuLabel(Prefab):
         """
         colour = (self.col_r, self.col_g, self.col_b)
         rendered = self.font.render(self.text, True, colour)
-        dest = ((background.get_rect().width - rendered.get_rect().width) // 2, (background.get_rect().height - rendered.get_rect().height) // 2)
-        background.blit(rendered, dest)
+        bg_rect = background.get_rect()
+        text_x = (bg_rect.width - rendered.get_rect().width) // 2
+        text_y = (bg_rect.height - rendered.get_rect().height) // 2
+
+        icon = getattr(self, "icon_surface", None)
+        if icon is not None:
+            icon_rect = icon.get_rect()
+            icon_rect.centery = bg_rect.centery
+            icon_rect.x = bg_rect.left + 20
+            background.blit(icon, icon_rect)
+            text_x = icon_rect.right + 10
+
+        background.blit(rendered, (text_x, text_y))
 
 
 class MenuButton(MenuLabel):
