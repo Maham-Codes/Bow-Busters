@@ -9,6 +9,7 @@ class Menu(Prefab):
     """
     Controls the menu system.
     """
+
     def __init__(self, game):
         """
         Constructor.
@@ -124,19 +125,28 @@ class Menu(Prefab):
 
         self.components.draw(screen)
 
-    def add_button(self, text, callback):
+    def add_button(self, text, callback, tint=None):
         """
         Adds a standard button to the menu screen.
 
         Args:
             text (str): The text to display on the button.
             callback (callable): The callback when the button is clicked.
+            tint (tuple|None): Optional (R, G, B) tint colour for the button background.
 
         Returns:
             (MenuButton): The button.
 
         """
         button = MenuButton(self, "menu_button", text, 0, self.component_next, callback)
+
+        # Optionally colour‑code the button background (used by leaderboard)
+        if tint is not None:
+            button.tint = tint
+            # Force the label to rebuild its image with the tint
+            img = button.image_template
+            button.image_template = None
+            button.set_image(img)
         button.rect.x = (self.rect.width - button.rect.width) / 2
 
         self.components.add(button)
@@ -219,9 +229,23 @@ class Menu(Prefab):
         elif len(self.leaderboard.entries) == 0:
             self.add_button("No scores yet", None)
         else:
-            # Show all entries with only name and score
-            for entry in self.leaderboard.entries:
-                self.add_button(entry.name + " - " + str(entry.score), None)
+            # Show all entries with only name and score, colour‑coding top 3
+            for index, entry in enumerate(self.leaderboard.entries):
+                text = entry.name + " - " + str(entry.score)
+
+                # Default: no tint
+                tint = None
+                if index == 0:
+                    # Gold
+                    tint = (255, 215, 0)
+                elif index == 1:
+                    # Silver
+                    tint = (192, 192, 192)
+                elif index == 2:
+                    # Bronze
+                    tint = (205, 127, 50)
+
+                self.add_button(text, None, tint=tint)
 
     def show_lose_screen(self):
         """
@@ -276,12 +300,143 @@ class Menu(Prefab):
         pass
 
 
-    
-
-   
 class MenuLabel(Prefab):
     """
     A label displayed by the menu system. Contains a background.
     """
 
-    
+    def __init__(self, menu, type, text, x, y):
+        """
+        Constructor.
+
+        Args:
+            menu (Menu): The menu instance.
+            type (str): The prefab name, used for font and background.
+            text (str): The text to display on the button.
+            x (int): The x position.
+            y (int): The y position.
+
+        """
+        super().__init__(type, x, y)
+
+        self.text = text
+        self.image_template = None
+        self.highlighted = False
+        self.selected = False
+        self.disabled = False
+        self.set_image(self.image_s)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        
+    def update(self):
+        """
+        Called each frame. Looks for mouse presses over the button.
+        """
+        if self.disabled:
+            self.set_image(self.image_d)
+        elif self.highlighted or self.selected:
+            self.set_image(self.image_h)
+        else:
+            self.set_image(self.image_s)
+
+    def set_text(self, text):
+        """
+        Sets the text on the label.
+
+        Args:
+            text (str): The new text to display.
+
+        """
+        if self.text != text:
+            self.text = text
+            
+            img = self.image_template
+            self.image_template = None
+            self.set_image(img)
+
+    def set_image(self, image):
+        """
+        Sets the background image to the given surface.
+        
+        Args:
+            image (Surface): The image to use.
+
+        """
+        if self.image_template == image:
+            return
+
+        self.image_template = image
+
+        if hasattr(self, "font"):
+            # Start from a copy of the base image
+            base = image.copy()
+
+            # Apply optional tint first (used for coloured leaderboard rows)
+            tint = getattr(self, "tint", None)
+            if tint is not None:
+                # Overlay a semi-transparent tint to keep prefab shading intact
+                tint_surface = pygame.Surface(base.get_size(), pygame.SRCALPHA)
+                tint_surface.fill((*tint, 140))  # 0-255 alpha, 140 keeps highlight subtle
+                base.blit(tint_surface, (0, 0))
+
+            # Render text on top
+            self.image = base
+            self.render_text(self.image)
+        else:
+            self.image = image
+           
+    def render_text(self, background):
+        """
+        Renders the button's text to the given background surface.
+
+        Args:
+            background (Surface): The surface to be rendered to.
+
+        """
+        colour = (self.col_r, self.col_g, self.col_b)
+        rendered = self.font.render(self.text, True, colour)
+        dest = ((background.get_rect().width - rendered.get_rect().width) // 2, (background.get_rect().height - rendered.get_rect().height) // 2)
+        background.blit(rendered, dest)
+
+
+class MenuButton(MenuLabel):
+    """
+    A menu label that responds to being clicked.
+    """
+
+    def __init__(self, menu, type, text, x, y, callback):
+        """
+        Constructor.
+
+        Args:
+            menu (Menu): The menu instance.
+            type (str): The prefab name, used for font and background.
+            text (str): The text to display on the button.
+            x (int): The x position.
+            y (int): The y position.
+            callback (callable): The callback triggered when the button is pressed.
+
+        """
+        super().__init__(menu, type, text, x, y)
+
+        self.callback = callback
+        self.last_pressed = True
+
+    def update(self):
+        """
+        Called each frame. Looks for mouse presses over the button.
+        """
+        hover = self.rect.collidepoint(pygame.mouse.get_pos())
+        self.highlighted = hover and self.callback is not None
+
+        super().update()
+
+    def clicked(self):
+        """
+        Called whenever the mouse is clicked.
+        """
+        hover = self.rect.collidepoint(pygame.mouse.get_pos())
+
+        if hover and self.callback is not None:
+            self.callback()
