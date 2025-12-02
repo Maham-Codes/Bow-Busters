@@ -163,7 +163,7 @@ class Menu(Prefab):
 
         self.components.draw(screen)
 
-    def add_button(self, text, callback, tint=None, icon=None):
+    def add_button(self, text, callback, tint=None, icon=None, left_align=False, text_colour=None):
         """
         Adds a standard button to the menu screen.
 
@@ -172,6 +172,8 @@ class Menu(Prefab):
             callback (callable): The callback when the button is clicked.
             tint (tuple|None): Optional (R, G, B) tint colour for the button background.
             icon (Surface|None): Optional icon surface to render before the text.
+            left_align (bool): If True, text is left-aligned instead of centred.
+            text_colour (tuple|None): Optional (R, G, B) text colour override.
 
         Returns:
             (MenuButton): The button.
@@ -179,8 +181,16 @@ class Menu(Prefab):
         """
         button = MenuButton(self, "menu_button", text, 0, self.component_next, callback)
 
-        # Optionally customise the button background/icon (used by leaderboard)
+        # Per-button layout / style customisation (used by leaderboard)
         customised = False
+        if left_align:
+            button.left_align = True
+            customised = True
+        if text_colour is not None:
+            button.text_colour_override = text_colour
+            customised = True
+
+        # Optionally customise the button background/icon (used by leaderboard)
         if tint is not None:
             button.tint = tint
             customised = True
@@ -273,24 +283,29 @@ class Menu(Prefab):
         elif len(self.leaderboard.entries) == 0:
             self.add_button("No scores yet", None)
         else:
-            # Show all entries with only name and score, colour‑coding top 3 and adding trophies
+            # Show all entries with only name and score.
+            # Top 3 get special purple styling & trophies.
             for index, entry in enumerate(self.leaderboard.entries):
                 text = entry.name + " - " + str(entry.score)
 
-                # Default: no tint
+                # Default styling for non-top-3
                 tint = None
+                text_colour = None
                 icon = _get_trophy_surface(index)
-                if index == 0:
-                    # Gold
-                    tint = (255, 215, 0)
-                elif index == 1:
-                    # Silver
-                    tint = (192, 192, 192)
-                elif index == 2:
-                    # Bronze
-                    tint = (205, 127, 50)
 
-                self.add_button(text, None, tint=tint, icon=icon)
+                if index < 3:
+                    # Dark purple background, light purple text for top 3
+                    tint = (60, 20, 90)        # dark purple
+                    text_colour = (230, 210, 255)  # light purple
+
+                self.add_button(
+                    text,
+                    None,
+                    tint=tint,
+                    icon=icon,
+                    left_align=True,
+                    text_colour=text_colour,
+                )
 
     def show_lose_screen(self):
         """
@@ -369,8 +384,11 @@ class MenuLabel(Prefab):
         self.highlighted = False
         self.selected = False
         self.disabled = False
+        # Optional, used by leaderboard buttons
         self.tint = None
         self.icon_surface = None
+        self.left_align = False
+        self.text_colour_override = None
         self.set_image(self.image_s)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -441,21 +459,34 @@ class MenuLabel(Prefab):
             background (Surface): The surface to be rendered to.
 
         """
+        # Base text colour from prefab, overridable per button
         colour = (self.col_r, self.col_g, self.col_b)
+        override = getattr(self, "text_colour_override", None)
+        if override is not None:
+            colour = override
+
         rendered = self.font.render(self.text, True, colour)
         bg_rect = background.get_rect()
-        text_x = (bg_rect.width - rendered.get_rect().width) // 2
+
+        # Vertical centring
         text_y = (bg_rect.height - rendered.get_rect().height) // 2
 
+        # Horizontal alignment: left or centred
+        if getattr(self, "left_align", False):
+            text_x = bg_rect.left + 20
+        else:
+            text_x = (bg_rect.width - rendered.get_rect().width) // 2
+
+        # Draw text first
+        background.blit(rendered, (text_x, text_y))
+
+        # Then optional trophy icon on the right side
         icon = getattr(self, "icon_surface", None)
         if icon is not None:
             icon_rect = icon.get_rect()
             icon_rect.centery = bg_rect.centery
-            icon_rect.x = bg_rect.left + 20
+            icon_rect.x = bg_rect.right - icon_rect.width - 20
             background.blit(icon, icon_rect)
-            text_x = icon_rect.right + 10
-
-        background.blit(rendered, (text_x, text_y))
 
 
 class MenuButton(MenuLabel):
