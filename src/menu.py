@@ -8,6 +8,8 @@ import os
 
 LEADERBOARD_ASSET_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "textures"))
 TROPHY_ICON_SIZE = (32, 32)
+TROPHY_FILENAMES = ["trophy_gold.png", "trophy_silver.png", "trophy_bronze.png"]
+_TROPHY_CACHE = [None, None, None]
 
 
 def _load_trophy_texture(filename):
@@ -26,12 +28,19 @@ def _load_trophy_texture(filename):
     except Exception as exc:
         print(f"Warning: failed to load trophy asset '{filename}': {exc}")
         return None
+        
 
-
-TROPHY_GOLD = _load_trophy_texture("trophy_gold.png")
-TROPHY_SILVER = _load_trophy_texture("trophy_silver.png")
-TROPHY_BRONZE = _load_trophy_texture("trophy_bronze.png")
-TROPHY_SURFACES = [TROPHY_GOLD, TROPHY_SILVER, TROPHY_BRONZE]
+def _get_trophy_surface(index):
+    """
+    Lazily loads and caches trophy surfaces (to avoid convert_alpha before display init).
+    """
+    if index < 0 or index >= len(TROPHY_FILENAMES):
+        return None
+    cached = _TROPHY_CACHE[index]
+    if cached is None:
+        cached = _load_trophy_texture(TROPHY_FILENAMES[index])
+        _TROPHY_CACHE[index] = cached
+    return cached
 
 
 class Menu(Prefab):
@@ -270,7 +279,7 @@ class Menu(Prefab):
 
                 # Default: no tint
                 tint = None
-                icon = TROPHY_SURFACES[index] if index < len(TROPHY_SURFACES) else None
+                icon = _get_trophy_surface(index)
                 if index == 0:
                     # Gold
                     tint = (255, 215, 0)
