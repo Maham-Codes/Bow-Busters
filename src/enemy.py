@@ -43,6 +43,14 @@ class Enemy(Prefab):
             delta (float): The time since the last update().
         
         """
+        # quick check: if our current target tile became blocked, ask for partial path
+        try:
+            target = self.target
+            if target and self.game.level.collision.point_blocked(target[0], target[1]):
+                self.path, self.target = self.game.level.pathfinding.get_partial_path(target)
+        except Exception:
+            pass
+        
         self.update_position(delta)
 
     def update_position(self, delta):
