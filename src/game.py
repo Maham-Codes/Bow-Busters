@@ -7,6 +7,7 @@ from core.enemy import Enemy
 from core.wave import Wave
 from core.menu import Menu
 from core.prefab import Prefab
+from core.abilities import AbilityManager
 
 
 class Game:
@@ -32,6 +33,7 @@ class Game:
             for name in ["pillbox", "wall", "mines", "artillery"]
         ]
 
+        self.abilities = AbilityManager(self)
         # Leaderboard is now handled by Menu class
         # No need to initialize here since Menu creates its own instance
 
@@ -65,6 +67,7 @@ class Game:
             # Update systems
             self.menu.update()
             self.level.pathfinding.update()
+            self.abilities.update(delta)
 
             if not self.menu.visible:
                 self.level.time += delta
