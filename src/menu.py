@@ -82,6 +82,14 @@ class Menu(Prefab):
 
         self.defence_buttons = [MenuButton(self, "menu_defence_button", self.game.defence_prototypes[i].display_name, (i + 1) * 64, 0, lambda: self.game.select_defence((pygame.mouse.get_pos()[0] - 64) // 64)) for i in range(len(self.game.defence_prototypes))]
         self.components.add(self.defence_buttons)
+        
+        # --- ability buttons ---
+        self.ability_buttons = [
+            MenuButton(self, "menu_pause_button", "Spike", 960, 0, lambda: self.game.abilities.use("crystal_spike"))
+            ]
+        # Add them to components
+        for btn in self.ability_buttons:
+            self.components.add(btn)
 
         self.wave_label = MenuLabel(self, "menu_pause_button", "Wave", 448, 0)
         self.lives_label = MenuLabel(self, "menu_pause_button", "Lives", 576, 0)
@@ -119,6 +127,15 @@ class Menu(Prefab):
                 self.defence_buttons[i].selected = (self.game.defence_type == i)
         
         self.components.update()
+        
+        # --- update ability buttons (crystal spike) ---
+        for btn in getattr(self, "ability_buttons", []):
+            ready = self.game.abilities.is_ready("crystal_spike")
+            btn.disabled = not ready
+
+            cd = self.game.abilities.get_cooldown("crystal_spike")
+            btn.set_text("Spike" if cd <= 0 else "Spike ({:.1f})".format(cd))
+
 
     def clicked(self):
         """
