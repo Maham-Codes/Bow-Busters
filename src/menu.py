@@ -1,5 +1,5 @@
-from src.prefab import Prefab
-from src.leaderboard import Leaderboard
+from core.prefab import Prefab
+from core.leaderboard import Leaderboard
 from pygame.sprite import OrderedUpdates
 import pygame
 import math
@@ -65,6 +65,8 @@ class Menu(Prefab):
         self.show_main_screen()
         self.visible = True
         self.leaderboard_name = None
+        self.defence_buttons = []
+        self.ability_buttons = []
         
     def show(self):
         """
@@ -80,14 +82,25 @@ class Menu(Prefab):
         self.visible = False
         self.clear()
 
-        self.defence_buttons = [MenuButton(self, "menu_defence_button", self.game.defence_prototypes[i].display_name, (i + 1) * 64, 0, lambda: self.game.select_defence((pygame.mouse.get_pos()[0] - 64) // 64)) for i in range(len(self.game.defence_prototypes))]
+        # defence buttons (left bar)
+        self.defence_buttons = [
+            MenuButton(
+                self,
+                "menu_defence_button",
+                self.game.defence_prototypes[i].display_name,
+                (i + 1) * 64,
+                0,
+                lambda i=i: self.game.select_defence(i),
+            )
+            for i in range(len(self.game.defence_prototypes))
+        ]
         self.components.add(self.defence_buttons)
-        
-        # --- ability buttons ---
+
+        # ability buttons (right bar)
         self.ability_buttons = [
-            MenuButton(self, "menu_pause_button", "Spike", 960, 0, lambda: self.game.abilities.use("crystal_spike"))
-            ]
-        # Add them to components
+            MenuButton(self, "menu_pause_button", "Spike", 960, 0, lambda: self.game.abilities.use("crystal_spike")),
+            MenuButton(self, "menu_pause_button", "Undo", 960, 64, self.game.undo_last_purchase),
+        ]
         for btn in self.ability_buttons:
             self.components.add(btn)
 
@@ -110,6 +123,7 @@ class Menu(Prefab):
         """
         self.components.remove(self.components)
         self.component_next = self.top
+        # no undo_button here anymore
 
     def update(self):
         """
@@ -125,16 +139,20 @@ class Menu(Prefab):
             for i in range(len(self.defence_buttons)):
                 self.defence_buttons[i].disabled = (self.game.defence_prototypes[i].cost > self.game.level.money)
                 self.defence_buttons[i].selected = (self.game.defence_type == i)
-        
+
         self.components.update()
         
-        # --- update ability buttons (crystal spike) ---
+        # --- update ability buttons ---
         for btn in getattr(self, "ability_buttons", []):
-            ready = self.game.abilities.is_ready("crystal_spike")
-            btn.disabled = not ready
-
-            cd = self.game.abilities.get_cooldown("crystal_spike")
-            btn.set_text("Spike" if cd <= 0 else "Spike ({:.1f})".format(cd))
+            if btn.text.startswith("Spike"):
+                ready = self.game.abilities.is_ready("crystal_spike")
+                btn.disabled = not ready
+                cd = self.game.abilities.get_cooldown("crystal_spike")
+                btn.set_text("Spike" if cd <= 0 else "Spike ({:.1f})".format(cd))
+            elif btn.text == "Undo":
+                has_history = len(self.game.purchase_history) > 0
+                btn.disabled = not has_history
+                # keep text as "Undo"
 
 
     def clicked(self):
