@@ -1,5 +1,5 @@
 from pygame.sprite import Sprite
-from core.prefab import Prefab
+from src.prefab import Prefab
 import pygame
 import math
 import random

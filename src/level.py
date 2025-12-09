@@ -1,7 +1,7 @@
-from core.prefab import Prefab
-from core.collision import Collision
-from core.wave import Wave
-from core.pathfinding import Pathfinding
+from src.prefab import Prefab
+from src.collision import Collision
+from src.wave import Wave
+from src.pathfinding import Pathfinding
 from pygame.sprite import OrderedUpdates
 
 
