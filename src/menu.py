@@ -264,6 +264,7 @@ class Menu(Prefab):
         Shows the main menu screen.
         """
         self.clear()
+        self.add_button("Music: " + ("ON" if self.game.music_on else "OFF"), self.toggle_music_button)
 
         if self.game.level.time > 0:
             self.add_button("Continue", self.hide)
@@ -393,6 +394,11 @@ class Menu(Prefab):
         """
         # This method is kept for backward compatibility but scores are now added automatically
         pass
+    
+    def toggle_music_button(self):
+        self.game.toggle_music()
+        # refresh main menu to update label text
+        self.show_main_screen()
 
 
 class MenuLabel(Prefab):
