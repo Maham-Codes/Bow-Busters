@@ -22,6 +22,7 @@ class Game:
         self.bullets = pygame.sprite.Group()
         self.explosions = pygame.sprite.Group()
         self.purchase_history = []        # stack of recent defences
+        self.music_on = True
 
         # Load level
         self.load_level("path")
@@ -149,3 +150,11 @@ class Game:
             defence.kill()
 
         self.level.money += entry.get("cost", 0)
+        
+        def toggle_music(self):
+            self.music_on = not self.music_on
+
+            if self.music_on:
+                pygame.mixer.music.set_volume(0.5)
+            else:
+                pygame.mixer.music.set_volume(0.0)
