@@ -70,3 +70,109 @@ class AbilityManager:
         # Short duration forces the slow to be refreshed every frame the enemy stays in the zone.
         duration = 0.1 
         source_id = 'ice_zone_slow'
+        
+        # Iterate over all enemies
+        for enemy in self.game.wave.enemies.sprites():
+            # Calculate the tile the enemy is currently occupying (aligned coordinates)
+            enemy_tile = (enemy.rect.x - (enemy.rect.x % tile_size),
+                          enemy.rect.y - (enemy.rect.y % tile_size))
+            
+            # Check if the enemy is on one of the slow tiles
+            if enemy_tile in effect.get("tiles", []):
+                # Apply the slow modifier to the enemy's Max-Heap
+                enemy.apply_speed_modifier(multiplier, duration, source_id)
+
+    def use(self, name):
+        """ 
+        Uses an ability. 
+        """
+        if not self.is_ready(name):
+            return False
+
+        self.cooldown_timers[name] = self.cooldowns[name]
+        
+        if name == "crystal_spike":
+            level = self.game.level
+            collision = level.collision
+            prefabs = []
+            tiles = []
+
+            # 8 top-heat tiles get spikes
+            top_tiles = heat.most_common(self.spike_count)
+
+            for (px, py), _ in top_tiles:
+                # Add prefab
+                p = Prefab("ability_spike", px, py)
+                level.prefabs.add(p)
+                prefabs.append(p)
+                tiles.append((px, py))
+
+                # Block point
+                collision.block_point(px, py)
+
+            self.active.append({
+                "name": name,
+                "time_left": self.spike_duration,
+                "tiles": tiles,
+                "prefabs": prefabs,
+                "multiplier": 0.0 # blocks movement entirely
+            })
+
+            return True
+
+        if name == "hot_zone":
+            level = self.game.level
+            collision = level.collision
+            prefabs = []
+            tiles = []
+
+            # random tile placement for simplicity
+            for i in range(10):
+                px = random.randint(0, level.collision.width - 1) * level.collision.tile_size
+                py = random.randint(0, level.collision.height - 1) * level.collision.tile_size
+                
+                # Check for critical path
+                if level.pathfinding.is_critical((px, py)):
+                    continue
+
+                # Add prefab
+                p = Prefab("ability_hot_zone", px, py)
+                level.prefabs.add(p)
+                prefabs.append(p)
+                tiles.append((px, py))
+
+                # Block point
+                collision.block_point(px, py)
+
+
+            self.active.append({
+                "name": name,
+                "time_left": self.hot_zone_duration,
+                "tiles": tiles,
+                "prefabs": prefabs,
+                "damage_per_sec": 10
+            })
+
+            return True
+
+        if name == "ice_zone":
+            level = self.game.level
+            tiles = []
+
+            # 6 top-heat tiles get slowed
+            top_tiles = heat.most_common(self.ice_tile_count)
+
+            for (px, py), _ in top_tiles:
+                tiles.append((px, py))
+
+            self.active.append({
+                "name": name,
+                "time_left": self.ice_zone_duration,
+                "tiles": tiles,
+                "multiplier": self.ice_slow_multiplier
+            })
+
+            return True
+
+        return False
+
