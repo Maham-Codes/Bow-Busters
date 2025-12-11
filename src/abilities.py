@@ -35,3 +35,38 @@ class AbilityManager:
 
         # Debug / visualization
         self.show_heat_overlay = False
+        
+        def update(self, delta):
+        # decrement cooldown timers
+        for k in list(self.cooldown_timers.keys()):
+            if self.cooldown_timers[k] > 0:
+                self.cooldown_timers[k] = max(0.0, self.cooldown_timers[k] - delta)
+
+        # update active effects
+        for effect in list(self.active):
+            effect["time_left"] -= delta
+            
+            #  NEW: Check for Ice Zone effects and apply slow to enemies
+            if effect["name"] == "ice_zone":
+                self._apply_ice_slow(effect)
+
+            if effect["time_left"] <= 0:
+                self._end_effect(effect)
+                try:
+                    self.active.remove(effect)
+                except ValueError:
+                    pass
+
+    # NEW HELPER METHOD TO PUSH SLOW TO ENEMIES
+    def _apply_ice_slow(self, effect):
+        """
+        Applies the Ice Zone slow modifier to all enemies currently on affected tiles.
+        """
+        level = self.game.level
+        tile_size = level.collision.tile_size
+        
+        # Get the required parameters from the effect
+        multiplier = effect.get("multiplier", self.ice_slow_multiplier) 
+        # Short duration forces the slow to be refreshed every frame the enemy stays in the zone.
+        duration = 0.1 
+        source_id = 'ice_zone_slow'
