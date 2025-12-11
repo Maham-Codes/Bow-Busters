@@ -305,7 +305,7 @@ class Path:
             A list of (int, int) tuples.
 
         """
-        if position[0] >=  self.pathfinding.game.window.resolution[0]:
+        if position[0] >= self.pathfinding.game.window.resolution[0]:
             return [(position[0] - self.res, position[1])]
 
         x_diff = range(position[0] - self.res, position[0] + self.res + 1, self.res)
