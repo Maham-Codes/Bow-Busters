@@ -135,3 +135,87 @@ class Pathfinding:
 
         return True
  
+class Path:
+    """
+    A single path across the level.
+    Calculated using the A* pathfinding algorithm across multiple frames.
+    Can be repaired if one of its points becomes blocked.
+    """
+
+    def __init__(self, pathfinding, start):
+        """ 
+        Constructor. 
+        ...
+        """
+        self.start = start
+        self.pathfinding = pathfinding
+        self.collision = self.pathfinding.collision
+        self.res = self.collision.tile_size
+        self.points = None
+        self.start_search()
+
+    def next(self, current):
+        """
+        Attempts to gets the next point in the path.
+        ...
+        """
+        if current not in self.points:
+            return False
+
+        index = self.points.index(current)
+        length = len(self.points)
+
+        if index + 1 == length:
+            return False
+
+        return self.points[index + 1]
+
+    def start_search(self):
+        """
+        (Re)starts the pathfinding search.
+        """
+        self.done = False
+        self.closed_set = set()
+        self.open_set = {self.start}
+        self.scores = {self.start: 0}
+        self.came_from = { }
+
+    def search(self):
+        """
+        Starts or continues an A* search for an apropriate path.
+        """
+        iterations = 25
+        while len(self.open_set) > 0 and iterations > 0:
+            iterations -= 1
+
+            # Find the next node to evaluate.
+            current, current_score = self.get_lowest_score(self.open_set, self.scores)
+
+            # Check if it is a destination
+            if current[0] < 0:
+                self.points = self.trace_path(current, self.came_from)
+                self.done = True
+                return
+
+            # Remove from the open set.
+            self.open_set.remove(current)
+
+            # Add to the closed set.
+            self.closed_set.add(current)
+
+            # Consider each neighbour.
+            for neighbour in self.get_neighbours(current):
+
+                # Skip if already in the closed set
+                if neighbour in self.closed_set:
+                    continue
+
+                score = current_score + self.get_cost(current, neighbour)
+                exists = (neighbour in self.open_set)
+
+                if not exists or self.scores[neighbour] > score:
+                    self.scores[neighbour] = score
+                    self.came_from[neighbour] = current
+
+                if not exists:
+                    self.open_set.add(neighbour)
