@@ -1,6 +1,6 @@
 from pygame.sprite import Sprite
 from src.prefab import Prefab
-#from core.pathfinding import heat
+from src.pathfinding import heat
 
 import pygame
 import math
