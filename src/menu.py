@@ -1,5 +1,5 @@
-from core.prefab import Prefab
-from core.leaderboard import Leaderboard
+from src.prefab import Prefab
+from src.leaderboard import Leaderboard
 from pygame.sprite import OrderedUpdates
 import pygame
 import math
