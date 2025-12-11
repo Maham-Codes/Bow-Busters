@@ -49,7 +49,7 @@ class Enemy(Prefab):
         self.effective_speed = self.speed * 1.0 # Current speed used for movement
         self.surged = False          # Flag to prevent multiple surges per life
         self.surge_multiplier = 2.5  # 250% speed
-        self.surge_duration = 3.0    # Lasts 3 seconds
+        self.surge_duration = 2.5    # Lasts 2.5 seconds
  
 
     def apply_speed_modifier(self, multiplier, duration, source_id):
