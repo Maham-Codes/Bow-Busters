@@ -86,3 +86,70 @@ class Enemy(Prefab):
             # Safety fallback: re-add base speed
             self.apply_speed_modifier(1.0, 0.0, 'base')
             self.effective_speed = self.speed * 1.0
+    def update(self, delta):
+        """ 
+        Called once per frame. 
+        """
+        # quick check: if our current target tile became blocked, ask for partial path
+        try:
+            target = self.target
+            if target and self.game.level.collision.point_blocked(target[0], target[1]):
+                self.path, self.target = self.game.level.pathfinding.get_partial_path(target)
+        except Exception:
+            pass
+            
+        # CALL HEAP MANAGEMENT
+        self._manage_speed_modifiers(delta)
+
+        self.update_position(delta)
+
+    #FIX: update_position MUST NOT be nested inside update
+    def update_position(self, delta):
+        # Track tile before movement (tile-aligned coordinates)
+        tile_size = self.game.level.collision.tile_size
+        old_tile = (int(self.rect.x) - (int(self.rect.x) % tile_size),
+                    int(self.rect.y) - (int(self.rect.y) % tile_size))
+
+        current = self.rect.topleft
+        target = self.target
+
+        dx = target[0] - current[0]
+        dy = target[1] - current[1]
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+
+        # REMOVED OLD SLOW CHECK - speed is managed by Max-Heap now
+        # Determine slow multiplier for current tile (1.0 default)
+        # try:
+        #     slow_multiplier = self.game.ability_manager.is_tile_slow(old_tile)
+        # except Exception:
+        #     slow_multiplier = 1.0
+
+        # effective movement speed uses the Max-Heap result
+        effective_speed = self.effective_speed 
+
+        max_move = delta * effective_speed
+
+        # Snap to the target.
+        if distance < max_move:
+            self.x = target[0]
+            self.y = target[1]
+            self.reached_target()
+        else:
+            proportion = max_move / distance
+            self.x += dx * proportion
+            self.y += dy * proportion
+
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+        # Track tile after movement
+        new_tile = (int(self.rect.x) - (int(self.rect.x) % tile_size),
+                    int(self.rect.y) - (int(self.rect.y) % tile_size))
+
+        # Increase heat if enemy stepped on a new tile
+        if new_tile != old_tile:
+            try:
+                heat[new_tile] += 1
+            except Exception:
+                pass
+
