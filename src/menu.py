@@ -398,3 +398,94 @@ class Menu(Prefab):
         self.game.toggle_music()
         # refresh main menu to update label text
         self.show_main_screen()
+        
+class MenuLabel(Prefab):
+    """
+    A label displayed by the menu system. Contains a background.
+    """
+
+    def __init__(self, menu, type, text, x, y):
+        """
+        Constructor.
+
+        Args:
+            menu (Menu): The menu instance.
+            type (str): The prefab name, used for font and background.
+            text (str): The text to display on the button.
+            x (int): The x position.
+            y (int): The y position.
+
+        """
+        super().__init__(type, x, y)
+
+        self.text = text
+        self.image_template = None
+        self.highlighted = False
+        self.selected = False
+        self.disabled = False
+        # Optional, used by leaderboard buttons
+        self.tint = None
+        self.icon_surface = None
+        self.left_align = False
+        self.text_colour_override = None
+        self.set_image(self.image_s)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        
+    def update(self):
+        """
+        Called each frame. Looks for mouse presses over the button.
+        """
+        if self.disabled:
+            self.set_image(self.image_d)
+        elif self.highlighted or self.selected:
+            self.set_image(self.image_h)
+        else:
+            self.set_image(self.image_s)
+
+    def set_text(self, text):
+        """
+        Sets the text on the label.
+
+        Args:
+            text (str): The new text to display.
+
+        """
+        if self.text != text:
+            self.text = text
+            
+            img = self.image_template
+            self.image_template = None
+            self.set_image(img)
+
+    def set_image(self, image):
+        """
+        Sets the background image to the given surface.
+        
+        Args:
+            image (Surface): The image to use.
+
+        """
+        if self.image_template == image:
+            return
+
+        self.image_template = image
+
+        if hasattr(self, "font"):
+            # Start from a copy of the base image
+            base = image.copy()
+
+            # Apply optional tint first (used for coloured leaderboard rows)
+            tint = getattr(self, "tint", None)
+            if tint is not None:
+                # Overlay a semi-transparent tint to keep prefab shading intact
+                tint_surface = pygame.Surface(base.get_size(), pygame.SRCALPHA)
+                tint_surface.fill((*tint, 140))  # 0-255 alpha, 140 keeps highlight subtle
+                base.blit(tint_surface, (0, 0))
+
+            # Render text on top
+            self.image = base
+            self.render_text(self.image)
+        else:
+            self.image = image
