@@ -116,3 +116,173 @@ class Menu(Prefab):
         self.components.add(MenuButton(self, "menu_pause_button", "Menu", 1088, 0, self.show))
 
         self.update()
+        
+        """
+        Removes all components from the menu.
+        """
+        self.components.remove(self.components)
+        self.component_next = self.top
+        # no undo_button here anymore
+
+    def update(self):
+        """
+        Called each frame.
+        """
+        if not self.visible:
+            self.wave_label.set_text("Wave: " + str(self.game.wave.number))
+            self.lives_label.set_text("Lives: " + str(self.game.level.lives))
+            self.lives_label.highlighted = (self.game.level.lives < 5)
+            self.money_label.set_text("Money: " + str(self.game.level.money))
+            self.score_label.set_text("Score: " + str(self.game.level.get_score()))
+
+            for i in range(len(self.defence_buttons)):
+                self.defence_buttons[i].disabled = (self.game.defence_prototypes[i].cost > self.game.level.money)
+                self.defence_buttons[i].selected = (self.game.defence_type == i)
+
+        self.components.update()
+        
+        # --- update ability buttons ---
+        for btn in getattr(self, "ability_buttons", []):
+            if btn.text.startswith("Spike"):
+                ready = self.game.abilities.is_ready("crystal_spike")
+                btn.disabled = not ready
+                cd = self.game.abilities.get_cooldown("crystal_spike")
+                btn.set_text("Spike" if cd <= 0 else "Spike ({:.1f})".format(cd))
+            elif btn.text == "Undo":
+                has_history = len(self.game.purchase_history) > 0
+                btn.disabled = not has_history
+                # keep text as "Undo"
+
+
+    def clicked(self):
+        """
+        Called when a mouse button is pressed.
+        """
+        for component in self.components:
+            if isinstance(component, MenuButton):
+                component.clicked()
+
+    def key_pressed(self, key):
+        """
+        Called when a key has been pressed.
+
+        Args:
+            key: The key that was pressed.
+
+        """
+        if self.leaderboard_name is None:
+            return
+
+        keys = { pygame.K_a: "a", pygame.K_b: "b", pygame.K_c: "c", pygame.K_d: "d", pygame.K_e: "e", pygame.K_f: "f", pygame.K_g: "g", pygame.K_h: "h", pygame.K_i: "i", 
+                pygame.K_j: "j", pygame.K_k: "k", pygame.K_l: "l", pygame.K_m: "m", pygame.K_n: "n", pygame.K_o: "o", pygame.K_p: "p", pygame.K_q: "q", pygame.K_r: "r", 
+                pygame.K_s: "s", pygame.K_t: "t", pygame.K_u: "u", pygame.K_v: "v", pygame.K_w: "w", pygame.K_x: "x", pygame.K_y: "y", pygame.K_z: "z",
+                pygame.K_0: "0", pygame.K_1: "1", pygame.K_2: "2", pygame.K_3: "3", pygame.K_4: "4", pygame.K_5: "5", pygame.K_6: "6", pygame.K_7: "7",
+                pygame.K_8: "8", pygame.K_9: "9" }
+
+        if key in keys.keys():
+            self.leaderboard_name.set_text(self.leaderboard_name.text + (keys[key].upper() if pygame.key.get_pressed()[pygame.K_LSHIFT] or pygame.key.get_pressed()[pygame.K_RSHIFT] else keys[key]))
+        elif key is pygame.K_BACKSPACE and self.leaderboard_name.text != "":
+            self.leaderboard_name.set_text(self.leaderboard_name.text[:-1])
+
+    def draw(self, screen):
+        """
+        Draws the menu and its components.
+
+        Args:
+            screen (Surface): The surface that is blitted to.
+
+        """
+        if self.visible:
+            screen.blit(self.image, (0, 0))
+
+        self.components.draw(screen)
+
+    def add_button(self, text, callback, tint=None, icon=None, left_align=False, text_colour=None):
+        """
+        Adds a standard button to the menu screen.
+
+        Args:
+            text (str): The text to display on the button.
+            callback (callable): The callback when the button is clicked.
+            tint (tuple|None): Optional (R, G, B) tint colour for the button background.
+            icon (Surface|None): Optional icon surface to render before the text.
+            left_align (bool): If True, text is left-aligned instead of centred.
+            text_colour (tuple|None): Optional (R, G, B) text colour override.
+
+        Returns:
+            (MenuButton): The button.
+
+        """
+        button = MenuButton(self, "menu_button", text, 0, self.component_next, callback)
+
+        # Per-button layout / style customisation (used by leaderboard)
+        customised = False
+        if left_align:
+            button.left_align = True
+            customised = True
+        if text_colour is not None:
+            button.text_colour_override = text_colour
+            customised = True
+
+        # Optionally customise the button background/icon (used by leaderboard)
+        if tint is not None:
+            button.tint = tint
+            customised = True
+        if icon is not None:
+            button.icon_surface = icon
+            customised = True
+        if customised:
+            img = button.image_template
+            button.image_template = None
+            button.set_image(img)
+        button.rect.x = (self.rect.width - button.rect.width) / 2
+
+        self.components.add(button)
+        self.component_next += button.rect.height
+        self.component_next += button.padding
+
+        return button
+
+    def add_level_button(self, level):
+        """
+        Adds a change level button to the menu screen.
+
+        Args:
+            level (str): The name of the level to display on the button.
+
+        """
+        button = MenuButton(self, "menu_level_" + level, level, 0, self.component_next, lambda: self.game.load_level(level))
+        button.rect.x = (self.rect.width - button.rect.width) / 2
+        
+        self.components.add(button)
+        self.component_next += button.rect.height
+        self.component_next += button.padding
+
+    def show_main_screen(self):
+        """
+        Shows the main menu screen.
+        """
+        self.clear()
+        self.add_button("Music: " + ("ON" if self.game.music_on else "OFF"), self.toggle_music_button)
+
+        if self.game.level.time > 0:
+            self.add_button("Continue", self.hide)
+            self.add_button("Restart Game", lambda: self.game.load_level(self.game.level.name))
+        else:
+            self.add_button("Start Game", self.hide)
+
+        self.add_button("How To Play", self.show_how_to_play_screen)
+        self.add_button("Change Level", self.show_change_level_screen)
+        self.add_button("Leaderboard", self.show_leaderboard_screen)
+        self.add_button("Quit Game", self.game.quit)
+
+    def show_how_to_play_screen(self):
+        """
+        Shows the how to play menu screen.
+        """
+        self.clear()
+        self.add_button("Back", self.show_main_screen)
+
+        instructions = Prefab("menu_how_to_play", 0, self.component_next)
+        self.components.add(instructions)
+        instructions.rect.x = (self.rect.width - instructions.rect.width) / 2
