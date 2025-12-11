@@ -175,4 +175,32 @@ class AbilityManager:
             return True
 
         return False
+   # ---------------- Effect cleanup ----------------
+    def _end_effect(self, effect):
+        level = self.game.level
+        collision = level.collision
 
+        # For blocking effects (spikes, hot_zone) — unblock tiles
+        if effect["name"] in ("crystal_spike", "hot_zone"):
+            for (px, py) in effect["tiles"]:
+                try:
+                    collision.unblock_point(px, py)
+                except Exception:
+                    pass
+
+        # Remove prefabs that were placed for the effect
+        for p in effect.get("prefabs", []):
+            try:
+                p.kill()
+            except Exception:
+                pass
+
+    # ---------------- Helpers used by enemies / UI ----------------
+    def get_cooldown(self, name):
+        return self.cooldown_timers.get(name, 0.0)
+
+    def is_ready(self, name):
+        return self.get_cooldown(name) <= 0.0
+
+    def toggle_heat_overlay(self):
+        self.show_heat_overlay = not self.show_heat_overlay
