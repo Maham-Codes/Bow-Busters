@@ -1,7 +1,7 @@
 import random
 import pygame
-from src.prefab import Prefab
-from src.pathfinding import heat   # heatmap (Counter)
+from core.prefab import Prefab
+from core.pathfinding import heat   # heatmap (Counter)
 
 class AbilityManager:
 
@@ -35,8 +35,8 @@ class AbilityManager:
 
         # Debug / visualization
         self.show_heat_overlay = False
-        
-        def update(self, delta):
+
+    def update(self, delta):
         # decrement cooldown timers
         for k in list(self.cooldown_timers.keys()):
             if self.cooldown_timers[k] > 0:
@@ -70,7 +70,7 @@ class AbilityManager:
         # Short duration forces the slow to be refreshed every frame the enemy stays in the zone.
         duration = 0.1 
         source_id = 'ice_zone_slow'
-        
+
         # Iterate over all enemies
         for enemy in self.game.wave.enemies.sprites():
             # Calculate the tile the enemy is currently occupying (aligned coordinates)
@@ -175,7 +175,8 @@ class AbilityManager:
             return True
 
         return False
-   # ---------------- Effect cleanup ----------------
+
+    # ---------------- Effect cleanup ----------------
     def _end_effect(self, effect):
         level = self.game.level
         collision = level.collision
@@ -204,3 +205,4 @@ class AbilityManager:
 
     def toggle_heat_overlay(self):
         self.show_heat_overlay = not self.show_heat_overlay
+
