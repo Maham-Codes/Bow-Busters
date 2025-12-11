@@ -1,7 +1,7 @@
 import random
 import pygame
-from core.prefab import Prefab
-from core.pathfinding import heat   # heatmap (Counter)
+from src.prefab import Prefab
+from src.pathfinding import heat   # heatmap (Counter)
 
 class AbilityManager:
 
