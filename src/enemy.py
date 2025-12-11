@@ -153,3 +153,53 @@ class Enemy(Prefab):
             except Exception:
                 pass
 
+     def reached_target(self):
+        """
+        Called when the enemy reaches their current target.
+        """
+        if not self.path.done:
+
+            # Check if the path was invalidated.
+            if self.target[0] < self.game.window.resolution[0] and self.path.points is not None and self.target in self.path.points:
+                self.path, self.target = self.game.level.pathfinding.get_partial_path(self.target)
+
+            return
+
+        self.target = self.path.next(self.target)
+        if not self.target:
+            self.game.level.lives -= 1
+            if(self.game.level.lives == 0):
+                self.game.menu.show_lose_screen()
+                
+            self.kill()
+
+    def take_damage(self, damage):
+        """ 
+        Takes damage. The enemy will die if their health drops below 0.
+        """
+        self.health -= damage
+
+        # ADDED SURGE LOGIC: Trigger speed boost at half health
+        if not self.surged and self.health <= self.max_health / 2:
+            self.apply_speed_modifier(
+                self.surge_multiplier, 
+                self.surge_duration, 
+                'surge' # Unique ID
+            )
+            self.surged = True
+        
+        if self.health <= 0:
+            self.kill()
+
+    def kill(self):
+        """
+        Called when the enemy dies or escapes.
+        """
+        super().kill()
+
+        self.game.wave.enemy_killed()  
+        
+        # True if the enemy died on the map
+        # and did not escape.
+        if self.rect.x > 1:       
+            self.game.level.money += self.money
