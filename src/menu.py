@@ -1,5 +1,5 @@
-from src.prefab import Prefab
-from src.leaderboard import Leaderboard
+from core.prefab import Prefab
+from core.leaderboard import Leaderboard
 from pygame.sprite import OrderedUpdates
 import pygame
 import math
@@ -116,7 +116,8 @@ class Menu(Prefab):
         self.components.add(MenuButton(self, "menu_pause_button", "Menu", 1088, 0, self.show))
 
         self.update()
-        
+
+    def clear(self):
         """
         Removes all components from the menu.
         """
@@ -286,7 +287,7 @@ class Menu(Prefab):
         instructions = Prefab("menu_how_to_play", 0, self.component_next)
         self.components.add(instructions)
         instructions.rect.x = (self.rect.width - instructions.rect.width) / 2
-        
+
     def show_change_level_screen(self):
         """
         Shows the change level screen.
@@ -398,7 +399,9 @@ class Menu(Prefab):
         self.game.toggle_music()
         # refresh main menu to update label text
         self.show_main_screen()
-        
+
+
+
 class MenuLabel(Prefab):
     """
     A label displayed by the menu system. Contains a background.
@@ -489,7 +492,7 @@ class MenuLabel(Prefab):
             self.render_text(self.image)
         else:
             self.image = image
-            
+           
     def render_text(self, background):
         """
         Renders the button's text to the given background surface.
