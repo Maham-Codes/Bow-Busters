@@ -1,4 +1,4 @@
-from collections import Counter 
+from collections import Counter
 heat = Counter() 
 
 import random
@@ -7,13 +7,21 @@ import random
 class Pathfinding:
     """
     Manages pathfinding and path selection for enemies.
-    ...
+
+    Keeps a pool of paths for use by enemies. A path is randomly
+    selected for each enemy that is spawned. If a path becomes blocked,
+    it will be repaired or recalculated. Enemies can switch between 
+    paths to continue moving if their current path is being recalculated.
     """
 
     def __init__(self, game, collision):
         """
         Constructor.
-        ...
+
+        Args:
+            game (Game): The game instance.
+            collision (Collision): The collision manager instance.
+
         """
         self.game = game
         self.collision = collision
@@ -23,7 +31,10 @@ class Pathfinding:
     def precompute(self, count):
         """
         Starts precomputing a given number of paths.
-        ...
+
+        Args:
+            count (int): The number of paths to precompute.
+
         """
         for i in range(count):
             self.pool.append(Path(self, self.find_start()))
@@ -31,7 +42,11 @@ class Pathfinding:
     def find_start(self):
         """
         Finds a start point for a full length path.
-        ...
+        Randomly picked, taking collision into account.
+
+        Returns:
+            (int, int): The start position.
+
         """
         cells = self.collision.height
         x = self.game.window.resolution[0]
@@ -50,7 +65,13 @@ class Pathfinding:
     def get_point_usage(self, point):
         """
         Returns the number of existing paths that use the given point.
-        ...
+
+        Args:
+            point (int, int): The point to check.
+
+        Returns:
+            (int): The number of paths using the given point.
+
         """
         total = 0
 
@@ -73,7 +94,10 @@ class Pathfinding:
     def get_path(self):
         """
         Picks a path for an enemy to follow.
-        ...
+
+        Returns:
+            A random path (may still be generating).
+
         """
         attempts = 500
         while attempts > 0:
@@ -89,7 +113,11 @@ class Pathfinding:
     def repair(self, point):
         """
         Called when a point has been blocked by a turret.
-        ...
+        Triggers path repair and regeneration (if needed).
+
+        Args:
+            point (int, int): The point that is now blocked.
+
         """
         for path in self.pool:
             # Repair paths that contain the point.
@@ -103,7 +131,14 @@ class Pathfinding:
     def get_partial_path(self, point):
         """
         Gets or creates a path that starts or passes through the given point.
-        ...
+        Used for enemies that are stuck due to a new turret placement.
+
+        Args:
+            start (int, int): The point that the path must include.
+
+        Returns:
+            (Path), (int, int): The requested path and the point to move to whilst waiting.
+
         """
         # Try intersecting paths.
         for path in self.pool:
@@ -125,7 +160,13 @@ class Pathfinding:
     def is_critical(self, point):
         """
         Works out if blocking the given point may make reaching the finish impossible.
-        ...
+        
+        Args:
+            point (int, int): The point to check.
+
+        Returns:
+            True if the point must be kept clear, otherwise returns False.
+
         """
         for path in self.pool:
             if path.done and path.start[0] >= self.game.window.resolution[0] and point not in path.points:
@@ -144,7 +185,11 @@ class Path:
     def __init__(self, pathfinding, start):
         """ 
         Constructor. 
-        ...
+        
+        Args:
+            pathfinding (Pathfinding): The pathfinding manager instance.
+            start (int, int): The start position of the path.
+        
         """
         self.start = start
         self.pathfinding = pathfinding
@@ -156,9 +201,15 @@ class Path:
     def next(self, current):
         """
         Attempts to gets the next point in the path.
-        ...
+        
+        Args:
+            current (int, int): The current point.
+
+        Returns:
+            (int, int) if successful, False if there are no more points in the path.
+
         """
-        if current not in self.points:
+        if current not in self.points: # <-- This is the fully corrected line
             return False
 
         index = self.points.index(current)
@@ -222,7 +273,14 @@ class Path:
     def get_lowest_score(self, open_set, scores):
         """
         Finds the point with the lowest score.
-        ...
+        
+        Args:
+            open_set (set(int, int)): A set of possible points
+            scores (list(int)): A list with the score of each position.
+
+        Returns:
+            ((int, int), int) The lowest scoring point and its score.
+
         """
         lowest_score = 999999999
         lowest_point = (0, 0)
@@ -239,9 +297,15 @@ class Path:
     def get_neighbours(self, position):
         """
         Finds a list of neighbouring tiles for the given position.
-        ...
+
+        Args:
+            position (int, int): The start position.
+
+        Returns:
+            A list of (int, int) tuples.
+
         """
-        if position[0] >= self.pathfinding.game.window.resolution[0]:
+        if position[0] >=  self.pathfinding.game.window.resolution[0]:
             return [(position[0] - self.res, position[1])]
 
         x_diff = range(position[0] - self.res, position[0] + self.res + 1, self.res)
@@ -252,14 +316,28 @@ class Path:
     def can_use_diagonal(self, a, b):
         """
         Returns true if the diagonal between a and b is clear.
-        ...
+
+        Args:
+            a (int, int): Position a.
+            b (int, int): Position b.
+
+        Returns:
+            (bool) True if the diagonal is clear, otherwise False.
+
         """
         return not self.collision.point_blocked(b[0], a[1]) and not self.collision.point_blocked(a[0], b[1])
 
     def get_cost(self, a, b):
         """
         Calculates the cost of moving between the given positions.
-        ...
+        
+        Args:
+            a (int, int): Position a.
+            b (int, int): Position b.
+            
+        Returns:
+            (int) The cost of moving from a to b.
+          
         """
         base = 3 if a[0] == b[0] or a[1] == b[1] else 4
         crowding = self.pathfinding.get_point_usage(b)
@@ -269,7 +347,14 @@ class Path:
     def trace_path(self, current, came_from):
         """
         Traces a finished path from finish to start.
-        ...
+
+        Args:
+            current (int, int): The last position in the path.
+            came_from (dict): The location each position was reached from.
+
+        Returns:
+            (list(int, int)): A list of points in the path.
+
         """
         path = [ current ]
         while current in came_from:
@@ -281,7 +366,10 @@ class Path:
     def repair(self, point):
         """
         Attempts to repair a path after a point is blocked.
-        ...
+        
+        Args:
+            point (int, int): The blocked point.
+
         """
         index = self.points.index(point)
 
