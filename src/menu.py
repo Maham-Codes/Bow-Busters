@@ -286,3 +286,115 @@ class Menu(Prefab):
         instructions = Prefab("menu_how_to_play", 0, self.component_next)
         self.components.add(instructions)
         instructions.rect.x = (self.rect.width - instructions.rect.width) / 2
+        
+    def show_change_level_screen(self):
+        """
+        Shows the change level screen.
+        """
+        self.clear()
+        self.add_button("Back", self.show_main_screen)
+
+        if self.game.level.name != "basic":
+            self.add_level_button("basic")
+
+        if self.game.level.name != "path":
+            self.add_level_button("path")
+
+        if self.game.level.name != "maze":
+            self.add_level_button("maze")
+
+    def show_leaderboard_screen(self):
+        """
+        Shows the leaderboard screen.
+        """
+        self.leaderboard.retrieve()
+        self.clear()
+        self.add_button("Back", self.show_main_screen)
+        self.add_button("Enter Player", self.show_enter_player_screen)
+        self.add_button("Current Player: " + self.leaderboard.get_current_player(), None)
+
+        if self.leaderboard.entries is None:
+            self.add_button("Error Loading Leaderboard", None)
+        elif len(self.leaderboard.entries) == 0:
+            self.add_button("No scores yet", None)
+        else:
+            # Show all entries with only name and score.
+            # Top 3 get special purple styling & trophies.
+            for index, entry in enumerate(self.leaderboard.entries):
+                text = entry.name + " - " + str(entry.score)
+
+                # Default styling for non-top-3
+                tint = None
+                text_colour = None
+                icon = _get_trophy_surface(index)
+
+                if index < 3:
+                    # Dark purple background, light purple text for top 3
+                    tint = (60, 20, 90)        # dark purple
+                    text_colour = (230, 210, 255)  # light purple
+
+                self.add_button(
+                    text,
+                    None,
+                    tint=tint,
+                    icon=icon,
+                    left_align=True,
+                    text_colour=text_colour,
+                )
+
+    def show_lose_screen(self):
+        """
+        Shows the game over screen and automatically adds score to leaderboard.
+        """
+        # Automatically add score for current player
+        current_score = self.game.level.get_score()
+        current_wave = self.game.wave.number
+        current_level = self.game.level.name
+        self.leaderboard.add_score(current_score, current_level, current_wave)
+        
+        self.show()
+        self.clear()
+        self.add_button("Game Over", None)
+        self.add_button("You Reached Wave " + str(current_wave), None)
+        self.add_button(str(current_score) + " Points", None)
+        self.add_button("Score added for: " + self.leaderboard.get_current_player(), None)
+        self.add_button("Restart Game", lambda: self.game.load_level(current_level))
+
+    def show_enter_player_screen(self):
+        """
+        Shows the enter player name screen.
+        """
+        self.clear()
+        self.add_button("Enter Player Name", None)
+        self.leaderboard_name = self.add_button("", None)
+        self.add_button("Submit", self.submit_player_name)
+        self.add_button("Back", self.show_leaderboard_screen)
+
+    def submit_player_name(self):
+        """
+        Sets the player name for tracking.
+        """
+        if self.leaderboard_name and self.leaderboard_name.text != "":
+            self.leaderboard.set_player(self.leaderboard_name.text)
+            self.show_leaderboard_screen()
+        else:
+            self.show_leaderboard_screen()
+
+    def show_add_to_leaderboard_screen(self):
+        """
+        Shows the add to leaderboard screen (deprecated - now automatic).
+        """
+        # This method is kept for backward compatibility but scores are now added automatically
+        self.show_lose_screen()
+
+    def submit_leaderboard(self):
+        """
+        Attempts to submit a score to the leaderboard (deprecated - now automatic).
+        """
+        # This method is kept for backward compatibility but scores are now added automatically
+        pass
+    
+    def toggle_music_button(self):
+        self.game.toggle_music()
+        # refresh main menu to update label text
+        self.show_main_screen()
