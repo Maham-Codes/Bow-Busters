@@ -1,0 +1,3 @@
+# prefab: crystal_spike.prefab
+image: aimg: textures/crystal_spike.png
+block: bool: 1

@@ -14,6 +14,9 @@ class Window:
         self.resolution = (width, height)
         self.screen = pygame.display.set_mode(self.resolution)
         self.set_background(0, 0, 0)
+        pygame.mixer.music.load("textures/background_music.mp3")  # put any MP3 here
+        pygame.mixer.music.play(-1)  # loop forever
+        pygame.mixer.music.set_volume(0.5)
 
     def set_title(self, title):
         """ 

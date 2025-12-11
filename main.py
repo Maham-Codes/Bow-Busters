@@ -1,6 +1,6 @@
 import pygame
-from core.game import Game
-from core.window import Window
+from src.game import Game
+from src.window import Window
 
 #init pygame
 pygame.init()
