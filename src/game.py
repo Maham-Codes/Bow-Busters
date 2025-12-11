@@ -3,11 +3,11 @@ import pygame
 from src.level import Level
 from src.collision import Collision
 from src.defence import Defence
-from core.enemy import Enemy
-from core.wave import Wave
-from core.menu import Menu
-from core.prefab import Prefab
-from core.abilities import AbilityManager
+from src.enemy import Enemy
+from src.wave import Wave
+from src.menu import Menu
+from src.prefab import Prefab
+from src.abilities import AbilityManager
 
 class Game:
     """ 
