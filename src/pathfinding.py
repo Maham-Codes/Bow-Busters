@@ -87,3 +87,51 @@ class Pathfinding:
                 return path
 
         return self.get_partial_path(self.find_start())[0]
+    
+    def repair(self, point):
+        """
+        Called when a point has been blocked by a turret.
+        ...
+        """
+        for path in self.pool:
+            # Repair paths that contain the point.
+            if path.done and point in path.points:
+                path.repair(point)
+
+            # Restart calculations of paths that may include the point.
+            if not path.done and (point in path.open_set or point in path.closed_set):
+                path.start_search()
+
+    def get_partial_path(self, point):
+        """
+        Gets or creates a path that starts or passes through the given point.
+        ...
+        """
+        # Try intersecting paths.
+        for path in self.pool:
+            if (path.done and point in path.points) or path.start == point:
+                return path, point
+
+        # Try paths that intersect with neighbours.
+        for neighbour in self.pool[0].get_neighbours(point):
+            for path in self.pool:
+                if path.done and neighbour in path.points:
+                    return path, neighbour
+
+        # No suitable path, make a new one.
+        path = Path(self, point)
+        self.pool.insert(0, path)
+        self.partials += 1
+        return path, point
+
+    def is_critical(self, point):
+        """
+        Works out if blocking the given point may make reaching the finish impossible.
+        ...
+        """
+        for path in self.pool:
+            if path.done and path.start[0] >= self.game.window.resolution[0] and point not in path.points:
+                return False
+
+        return True
+ 
