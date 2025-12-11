@@ -489,3 +489,82 @@ class MenuLabel(Prefab):
             self.render_text(self.image)
         else:
             self.image = image
+            
+    def render_text(self, background):
+        """
+        Renders the button's text to the given background surface.
+
+        Args:
+            background (Surface): The surface to be rendered to.
+
+        """
+        # Base text colour from prefab, overridable per button
+        colour = (self.col_r, self.col_g, self.col_b)
+        override = getattr(self, "text_colour_override", None)
+        if override is not None:
+            colour = override
+
+        rendered = self.font.render(self.text, True, colour)
+        bg_rect = background.get_rect()
+
+        # Vertical centring
+        text_y = (bg_rect.height - rendered.get_rect().height) // 2
+
+        # Horizontal alignment: left or centred
+        if getattr(self, "left_align", False):
+            text_x = bg_rect.left + 20
+        else:
+            text_x = (bg_rect.width - rendered.get_rect().width) // 2
+
+        # Draw text first
+        background.blit(rendered, (text_x, text_y))
+
+        # Then optional trophy icon on the right side
+        icon = getattr(self, "icon_surface", None)
+        if icon is not None:
+            icon_rect = icon.get_rect()
+            icon_rect.centery = bg_rect.centery
+            icon_rect.x = bg_rect.right - icon_rect.width - 20
+            background.blit(icon, icon_rect)
+
+
+class MenuButton(MenuLabel):
+    """
+    A menu label that responds to being clicked.
+    """
+
+    def __init__(self, menu, type, text, x, y, callback):
+        """
+        Constructor.
+
+        Args:
+            menu (Menu): The menu instance.
+            type (str): The prefab name, used for font and background.
+            text (str): The text to display on the button.
+            x (int): The x position.
+            y (int): The y position.
+            callback (callable): The callback triggered when the button is pressed.
+
+        """
+        super().__init__(menu, type, text, x, y)
+
+        self.callback = callback
+        self.last_pressed = True
+
+    def update(self):
+        """
+        Called each frame. Looks for mouse presses over the button.
+        """
+        hover = self.rect.collidepoint(pygame.mouse.get_pos())
+        self.highlighted = hover and self.callback is not None
+
+        super().update()
+
+    def clicked(self):
+        """
+        Called whenever the mouse is clicked.
+        """
+        hover = self.rect.collidepoint(pygame.mouse.get_pos())
+
+        if hover and self.callback is not None:
+            self.callback()
