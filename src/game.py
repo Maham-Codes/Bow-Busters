@@ -1,12 +1,12 @@
 import random
 import pygame
-from core.level import Level
-from core.collision import Collision
-from core.defence import Defence
-from core.enemy import Enemy
-from core.wave import Wave
-from core.menu import Menu
-from core.prefab import Prefab
+from src.level import Level
+from src.collision import Collision
+from src.defense import Defense
+from src.enemy import Enemy
+from src.wave import Wave
+from src.menu import Menu
+from src.prefab import Prefab
 
 
 class Game:
