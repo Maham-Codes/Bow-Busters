@@ -61,3 +61,29 @@ class Pathfinding:
                 total += 1
 
         return total
+    
+    def update(self):
+        """
+        Continues generating paths.
+        Run each frame.
+        """
+        for path in self.pool:
+            if not path.done:
+                path.search()
+                return
+
+    def get_path(self):
+        """
+        Picks a path for an enemy to follow.
+        ...
+        """
+        attempts = 500
+        while attempts > 0:
+            attempts -= 1
+
+            path = self.pool[random.randint(self.partials, len(self.pool) - 1)] 
+            
+            if path.done and path.start[0] >= self.game.window.resolution[0]:
+                return path
+
+        return self.get_partial_path(self.find_start())[0]
