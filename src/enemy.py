@@ -1,5 +1,5 @@
 from pygame.sprite import Sprite
-from core.prefab import Prefab
+from src.prefab import Prefab
 #from core.pathfinding import heat
 
 import pygame
@@ -51,6 +51,7 @@ class Enemy(Prefab):
         self.surge_multiplier = 2.5  # 250% speed
         self.surge_duration = 3.0    # Lasts 3 seconds
  
+
     def apply_speed_modifier(self, multiplier, duration, source_id):
         """
         Adds a new speed modifier to the heap.
@@ -86,6 +87,8 @@ class Enemy(Prefab):
             # Safety fallback: re-add base speed
             self.apply_speed_modifier(1.0, 0.0, 'base')
             self.effective_speed = self.speed * 1.0
+
+
     def update(self, delta):
         """ 
         Called once per frame. 
@@ -153,7 +156,8 @@ class Enemy(Prefab):
             except Exception:
                 pass
 
-     def reached_target(self):
+
+    def reached_target(self):
         """
         Called when the enemy reaches their current target.
         """
