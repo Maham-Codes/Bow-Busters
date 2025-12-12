@@ -51,7 +51,12 @@ class Enemy(Prefab):
  
 
     def apply_speed_modifier(self, multiplier, duration, source_id):
-        
+        # adds a new speed effect to the enemy like slow or speed boost
+        # replaces any existing effect from the same source
+        # args: multiplier - how much to multiply speed by
+        #       duration - how long the effect lasts in seconds
+        #       source_id - unique name for this effect source
+        # remove old modifier from this source if it exists
         new_heap = [m for m in self.speed_modifiers if m[2] != source_id]
         self.speed_modifiers = new_heap
         heapq.heapify(self.speed_modifiers) # Re-heapify after removal
