@@ -10,7 +10,7 @@ pygame.init()
 window = Window(1280, 720)
 game = Game(window)
 
-print("\n========== RUNNING AUTOMATED TEST CASES ==========\n")
+print("\n       RUNNING AUTOMATED TEST CASES     \n")
 
 
 # TEST CASE 1 — A* Pathfinding Completes Successfully
@@ -129,9 +129,7 @@ def test_undo_stack():
 
     print("✓ Test Case 5 Passed — Undo Stack Works (LIFO)")
 
-# ---------------------------------------------------
 # RUN ALL TESTS
-# ---------------------------------------------------
 test_pathfinding_basic()
 test_collision_block_unblock()
 test_defence_targeting()
