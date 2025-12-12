@@ -1,6 +1,6 @@
 
 # UI Settings
-display_name   :  str   :  BlueChonk
+display_name   :  str   :  Chonk
 
 # Sprite
 images  :  rotimg  :  textures\defence_bluechonk.png

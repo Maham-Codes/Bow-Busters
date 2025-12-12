@@ -91,7 +91,7 @@ class Prefab(Sprite):
                     value = line[2].strip()
 
                     if type == "str":
-                        entries[key] = value
+                        entries[key] = value.replace("\\n", "\n")
                     elif type == "int":
                         entries[key] = int(value)
                     elif type == "float":
