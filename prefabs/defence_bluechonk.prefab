@@ -1,9 +1,9 @@
 
 # UI Settings
-display_name   :  str   :  BlueChonk
+display_name   :  str   :  BatCat
 
 # Sprite
-images  :  rotimg  :  textures\defence_bluechonk.png
+images  :  rotimg  :  textures\defence_batcat.png
 
 # Physics
 block  :  bool  :  1
