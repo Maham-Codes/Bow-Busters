@@ -136,5 +136,5 @@ test_defence_targeting()
 test_pathfinding_repair()
 test_undo_stack()
 
-print("\n========== ALL TEST CASES PASSED SUCCESSFULLY ==========\n")
+print("\n     ALL TEST CASES PASSED SUCCESSFULLY \n")
 
