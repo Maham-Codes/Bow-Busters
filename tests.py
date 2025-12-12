@@ -36,9 +36,8 @@ def test_pathfinding_basic():
     print("✓ Test Case 1 Passed — Valid A* Path Generated")
 
 
-# ---------------------------------------------------
 # TEST CASE 2 — Collision Block/Unblock Works Correctly
-# ---------------------------------------------------
+
 def test_collision_block_unblock():
     col = game.level.collision
     x, y = 64, 64
@@ -52,9 +51,8 @@ def test_collision_block_unblock():
     print("✓ Test Case 2 Passed — Collision System Working")
 
 
-# ---------------------------------------------------
 # TEST CASE 3 — Defence Target Suitability Logic (Guaranteed Pass)
-# ---------------------------------------------------
+
 def test_defence_targeting():
     proto = game.defence_prototypes[0]
     d = Defence(game, proto.name, 160, 160)
