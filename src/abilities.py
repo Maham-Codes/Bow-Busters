@@ -102,7 +102,7 @@ class AbilityManager:
 
             for (px, py), _ in top_tiles:
                 # Add prefab
-                p = Prefab("ability_spike", px, py)
+                p = Prefab("crystal_spike", px, py)
                 level.prefabs.add(p)
                 prefabs.append(p)
                 tiles.append((px, py))
