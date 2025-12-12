@@ -82,9 +82,8 @@ def test_defence_targeting():
 
     print("✓ Test Case 3 Passed — Defence Target Selection Works")
 
-# ---------------------------------------------------
+
 # TEST CASE 4 — Pathfinding Repair When Tile Blocked
-# ---------------------------------------------------
 def test_pathfinding_repair():
     pf = game.level.pathfinding
     col = game.level.collision
@@ -114,9 +113,7 @@ def test_pathfinding_repair():
 
     print("✓ Test Case 4 Passed — Pathfinding Repair Works")
 
-# ---------------------------------------------------
 # TEST CASE 5 — Undo Stack Behavior
-# ---------------------------------------------------
 def test_undo_stack():
     game.purchase_history = []
 
