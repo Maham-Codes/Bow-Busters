@@ -147,3 +147,86 @@ test_undo_stack()
 
 print("\n========== ALL TEST CASES PASSED SUCCESSFULLY ==========\n")
 
+
+import time
+
+def test_pathfinding_performance():
+    print("\n--- A* Pathfinding Performance Test ---")
+
+    sizes = [10, 20, 30]   # number of update frames to simulate
+    results = []
+
+    for frames in sizes:
+        start = time.time()
+
+        pf = game.level.pathfinding
+
+        # force recalculation
+        for path in pf.pool:
+            path.start_search()
+
+        # simulate frames
+        for _ in range(frames):
+            pf.update()
+
+        end = time.time()
+        elapsed = end - start
+
+        print(f"Frames: {frames}, Time: {elapsed:.5f}s")
+        results.append((frames, elapsed))
+
+    print("✓ Pathfinding scaling test completed\n")
+
+def test_targeting_performance():
+    print("\n--- Target Selection Performance Test ---")
+
+    counts = [10, 50, 100, 200]
+    proto = game.defence_prototypes[0]
+    d = Defence(game, proto.name, 100, 100)
+    d.attack_range = 999999   # ensure all enemies are in range
+
+    for n in counts:
+        game.wave.enemies.empty()
+
+        # create n enemies
+        for i in range(n):
+            e = Enemy(game, "enemy_small", 100+i, 100)
+            game.wave.enemies.add(e)
+
+        start = time.time()
+        d.get_target()
+        end = time.time()
+
+        print(f"Enemies: {n}, Time: {(end-start)*1000000:.2f} microseconds")
+
+    print("✓ Targeting scaling test completed\n")
+
+def test_stack_performance():
+    print("\n--- Undo Stack Performance Test ---")
+
+    operations = 100000
+    stack = []
+
+    # push test
+    start = time.time()
+    for _ in range(operations):
+        stack.append(1)
+    end = time.time()
+    print(f"Push {operations} ops: {end-start:.5f}s")
+
+    # pop test
+    start = time.time()
+    for _ in range(operations):
+        stack.pop()
+    end = time.time()
+    print(f"Pop {operations} ops: {end-start:.5f}s")
+
+    print("✓ Stack performance test completed\n")
+
+# ---------------------------------------------------
+# RUN PERFORMANCE TESTS
+# ---------------------------------------------------
+test_pathfinding_performance()
+test_targeting_performance()
+test_stack_performance()
+
