@@ -1,47 +1,36 @@
 import pygame
 class Window:
-    """ 
-    wrapper class for pygame window
-    """
+    # wrapper for pygame window that handles display and background music
+    # sets up screen size colors and audio
 
     def __init__(self, width, height):
-        """ 
-        constructor   
-        args:
-            width (int): window width, in pixels
-            height (int): window height, in pixels
-        """
+        # creates the game window and starts background music
+        # args: width - window width in pixels
+        #       height - window height in pixels
         self.resolution = (width, height)
         self.screen = pygame.display.set_mode(self.resolution)
         self.set_background(0, 0, 0)
-        pygame.mixer.music.load("textures/background_music.mp3")  # put any MP3 here
-        pygame.mixer.music.play(-1)  # loop forever
+        # load and loop background music
+        pygame.mixer.music.load("textures/background_music.mp3")
+        pygame.mixer.music.play(-1)
         pygame.mixer.music.set_volume(0.5)
 
     def set_title(self, title):
-        """ 
-        s window title
-        args:
-            title (str): new title textt
-        """
+        # changes the text shown in the window title bar
+        # args: title - new title text to display
         pygame.display.set_caption(title)
 
     def set_background(self, r, g, b):
-        """ 
-        Sets the background colour 
-        
-        Args:
-            r (float): The new r channel value
-            g (float): The new g channel value
-            b (float): The new b channel value
-        """
+        # changes the background color of the window
+        # args: r - red value 0 to 255
+        #       g - green value 0 to 255
+        #       b - blue value 0 to 255
         self.background = pygame.Surface(self.resolution)
         self.background.fill(pygame.Color(r, g, b))
         self.background = self.background.convert()
 
     def clear(self):
-        """ 
-        clears window using bg color
-        """
+        # clears the screen by filling it with the background color
+        # called before drawing each new frame
         pygame.display.flip()
         self.screen.blit(self.background, (0, 0))
