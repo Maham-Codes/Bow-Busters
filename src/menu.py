@@ -401,6 +401,7 @@ class Menu(Prefab):
         self.show_main_screen()
 
 
+
 class MenuLabel(Prefab):
     """
     A label displayed by the menu system. Contains a background.

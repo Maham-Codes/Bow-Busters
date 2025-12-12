@@ -21,8 +21,14 @@ class Game:
         self.defences = pygame.sprite.Group()
         self.bullets = pygame.sprite.Group()
         self.explosions = pygame.sprite.Group()
+        self.purchase_history = []  # stack of recent defences
+
+      
+        self.abilities = AbilityManager(self) 
+        
+        # Load level (This calls self.load_level and initializes self.menu)
         self.purchase_history = []        # stack of recent defences
-        self.music_on = True
+        self.music_on = True   # music starts enabled
 
         # Load level
         self.load_level("path")
@@ -34,9 +40,6 @@ class Game:
             for name in ["pillbox", "wall", "mines", "artillery"]
         ]
         
-        self.abilities = AbilityManager(self)
-
-
     def load_level(self, name):
         """ Loads a new level. """
         self.defences.empty()
@@ -45,7 +48,7 @@ class Game:
         self.level = Level(self, name)
         self.wave = Wave(self, 1)
         self.menu = Menu(self)
-        self.purchase_history = []        # reset history when level restarts
+        self.purchase_history = []  # reset history when level restarts
 
     def run(self):
         """ Runs the main game loop. """
@@ -92,6 +95,12 @@ class Game:
             self.wave.enemies.draw(self.window.screen)
             self.explosions.draw(self.window.screen)
             self.menu.draw(self.window.screen)
+            
+            # The heat overlay is drawn by the menu if toggled on
+            if self.abilities.show_heat_overlay:
+                self.menu.draw_heat_overlay(self.window.screen)
+
+            pygame.display.flip()
 
     def quit(self):
         """ Quits and closes the game. """
@@ -151,10 +160,12 @@ class Game:
 
         self.level.money += entry.get("cost", 0)
         
-        def toggle_music(self):
-            self.music_on = not self.music_on
+    def toggle_music(self):
+        self.music_on = not self.music_on
 
-            if self.music_on:
-                pygame.mixer.music.set_volume(0.5)
-            else:
-                pygame.mixer.music.set_volume(0.0)
+        if self.music_on:
+            pygame.mixer.music.set_volume(0.5)
+        else:
+            pygame.mixer.music.set_volume(0.0)
+
+
