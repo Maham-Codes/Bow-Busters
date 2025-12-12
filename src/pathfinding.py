@@ -5,49 +5,31 @@ import random
 
 
 class Pathfinding:
-    """
-    handles pathfinding and path selection for all enemies in the game
-
-    maintains a pool of precalculated paths that enemies can follow
-    when an enemy spawns it gets assigned a random path from this pool
-    if a turret blocks part of a path the system will try to repair it
-    or recalculate a new route so enemies can keep moving
-    """
+    # handles pathfinding and path selection for all enemies in the game
+    # maintains a pool of precalculated paths that enemies can follow
+    # when an enemy spawns it gets assigned a random path from this pool
+    # if a turret blocks part of a path the system will try to repair it
+    # or recalculate a new route so enemies can keep moving
 
     def __init__(self, game, collision):
-        """
-        sets up the pathfinding system
-
-        args:
-            game: reference to the main game object
-            collision: handles collision detection for path validation
-
-        """
+        # sets up the pathfinding system
+        # args: game - reference to the main game object
+        #       collision - handles collision detection for path validation
         self.game = game
         self.collision = collision
         self.pool = []
         self.partials = 0
 
     def precompute(self, count):
-        """
-        begins calculating paths in advance so theyre ready when enemies spawn
-
-        args:
-            count: how many paths to generate for the pool
-
-        """
+        # begins calculating paths in advance so theyre ready when enemies spawn
+        # args: count - how many paths to generate for the pool
         for i in range(count):
             self.pool.append(Path(self, self.find_start()))
 
     def find_start(self):
-        """
-        picks a random starting position on the right edge of the screen
-        makes sure the spot isnt blocked by checking collision
-
-        returns:
-            tuple with x and y coordinates for the start point
-
-        """
+        # picks a random starting position on the right edge of the screen
+        # makes sure the spot isnt blocked by checking collision
+        # returns: tuple with x and y coordinates for the start point
         cells = self.collision.height
         x = self.game.window.resolution[0]
         attempts = 100
@@ -63,17 +45,10 @@ class Pathfinding:
         return (x, random.randint(0, cells - 1) * self.collision.tile_size)
 
     def get_point_usage(self, point):
-        """
-        counts how many paths go through a specific point
-        used to avoid crowding too many enemies on the same tiles
-
-        args:
-            point: the coordinates to check
-
-        returns:
-            number of paths that pass through this point
-
-        """
+        # counts how many paths go through a specific point
+        # used to avoid crowding too many enemies on the same tiles
+        # args: point - the coordinates to check
+        # returns: number of paths that pass through this point
         total = 0
 
         for path in self.pool:
@@ -83,24 +58,17 @@ class Pathfinding:
         return total
     
     def update(self):
-        """
-        continues calculating any unfinished paths
-        call this every frame to gradually build up the path pool
-        """
+        # continues calculating any unfinished paths
+        # call this every frame to gradually build up the path pool
         for path in self.pool:
             if not path.done:
                 path.search()
                 return
 
     def get_path(self):
-        """
-        selects a random path from the pool for a newly spawned enemy
-        tries to find a completed path but will create a partial one if needed
-
-        returns:
-            a path object the enemy can follow
-
-        """
+        # selects a random path from the pool for a newly spawned enemy
+        # tries to find a completed path but will create a partial one if needed
+        # returns: a path object the enemy can follow
         attempts = 500
         while attempts > 0:
             attempts -= 1
@@ -113,14 +81,9 @@ class Pathfinding:
         return self.get_partial_path(self.find_start())[0]
 
     def repair(self, point):
-        """
-        called when a player places a turret and blocks part of a path
-        tries to fix all affected paths or restarts their calculation
-
-        args:
-            point: the coordinates that just got blocked
-
-        """
+        # called when a player places a turret and blocks part of a path
+        # tries to fix all affected paths or restarts their calculation
+        # args: point - the coordinates that just got blocked
         for path in self.pool:
             # fix any completed paths that go through this blocked point
             if path.done and point in path.points:
@@ -131,17 +94,10 @@ class Pathfinding:
                 path.start_search()
 
     def get_partial_path(self, point):
-        """
-        finds or creates a path that goes through a specific location
-        used when an enemy gets stuck and needs a new route from their current position
-
-        args:
-            point: the coordinates where the enemy is currently located
-
-        returns:
-            the path to follow and the immediate next position to move toward
-
-        """
+        # finds or creates a path that goes through a specific location
+        # used when an enemy gets stuck and needs a new route from their current position
+        # args: point - the coordinates where the enemy is currently located
+        # returns: the path to follow and the immediate next position to move toward
         # check if any existing path goes through this exact spot
         for path in self.pool:
             if (path.done and point in path.points) or path.start == point:
@@ -160,17 +116,10 @@ class Pathfinding:
         return path, point
 
     def is_critical(self, point):
-        """
-        checks if blocking this point would make it impossible for enemies to reach the goal
-        prevents players from completely blocking all possible paths
-        
-        args:
-            point: the coordinates to check
-
-        returns:
-            true if blocking this would trap all enemies false if theres another way
-
-        """
+        # checks if blocking this point would make it impossible for enemies to reach the goal
+        # prevents players from completely blocking all possible paths
+        # args: point - the coordinates to check
+        # returns: true if blocking this would trap all enemies false if theres another way
         for path in self.pool:
             if path.done and path.start[0] >= self.game.window.resolution[0] and point not in path.points:
                 return False
@@ -179,22 +128,15 @@ class Pathfinding:
 
 
 class Path:
-    """
-    represents one route from the right side of the screen to the left goal
-    uses a star algorithm to find the shortest path while avoiding obstacles
-    calculation happens gradually over multiple frames to avoid lag
-    can automatically fix itself when turrets block part of the route
-    """
+    # represents one route from the right side of the screen to the left goal
+    # uses a star algorithm to find the shortest path while avoiding obstacles
+    # calculation happens gradually over multiple frames to avoid lag
+    # can automatically fix itself when turrets block part of the route
 
     def __init__(self, pathfinding, start):
-        """ 
-        creates a new path starting from the given position
-        
-        args:
-            pathfinding: reference to the main pathfinding manager
-            start: the coordinates where this path begins
-        
-        """
+        # creates a new path starting from the given position
+        # args: pathfinding - reference to the main pathfinding manager
+        #       start - the coordinates where this path begins
         self.start = start
         self.pathfinding = pathfinding
         self.collision = self.pathfinding.collision
@@ -203,16 +145,9 @@ class Path:
         self.start_search()
 
     def next(self, current):
-        """
-        gets the next waypoint an enemy should move toward
-        
-        args:
-            current: where the enemy is right now
-
-        returns:
-            the next coordinates to move to or false if we reached the end
-
-        """
+        # gets the next waypoint an enemy should move toward
+        # args: current - where the enemy is right now
+        # returns: the next coordinates to move to or false if we reached the end
         if current not in self.points:
             return False
 
@@ -225,9 +160,7 @@ class Path:
         return self.points[index + 1]
 
     def start_search(self):
-        """
-        resets all variables and begins calculating the path from scratch
-        """
+        # resets all variables and begins calculating the path from scratch
         self.done = False
         self.closed_set = set()
         self.open_set = {self.start}
@@ -235,10 +168,8 @@ class Path:
         self.came_from = { }
 
     def search(self):
-        """
-        runs a few iterations of the a star pathfinding algorithm
-        called repeatedly each frame until the path is complete
-        """
+        # runs a few iterations of the a star pathfinding algorithm
+        # called repeatedly each frame until the path is complete
         iterations = 25
         while len(self.open_set) > 0 and iterations > 0:
             iterations -= 1
@@ -276,18 +207,11 @@ class Path:
                     self.open_set.add(neighbour)
 
     def get_lowest_score(self, open_set, scores):
-        """
-        finds which point in the open set has the best score
-        lower scores mean shorter estimated distance to goal
-        
-        args:
-            open_set: all points we havent fully explored yet
-            scores: dictionary mapping each point to its calculated score
-
-        returns:
-            the best point to explore next and its score value
-
-        """
+        # finds which point in the open set has the best score
+        # lower scores mean shorter estimated distance to goal
+        # args: open_set - all points we havent fully explored yet
+        #       scores - dictionary mapping each point to its calculated score
+        # returns: the best point to explore next and its score value
         lowest_score = 999999999
         lowest_point = (0, 0)
 
@@ -301,17 +225,10 @@ class Path:
         return lowest_point, lowest_score
 
     def get_neighbours(self, position):
-        """
-        gets all tiles adjacent to the current position that arent blocked
-        includes diagonal movement if both intermediate tiles are clear
-
-        args:
-            position: the coordinates to find neighbors for
-
-        returns:
-            list of valid coordinates the enemy could move to next
-
-        """
+        # gets all tiles adjacent to the current position that arent blocked
+        # includes diagonal movement if both intermediate tiles are clear
+        # args: position - the coordinates to find neighbors for
+        # returns: list of valid coordinates the enemy could move to next
         if position[0] >= self.pathfinding.game.window.resolution[0]:
             return [(position[0] - self.res, position[1])]
 
@@ -321,51 +238,30 @@ class Path:
         return [(x, y) for x in x_diff for y in y_diff if (x, y) != position and (x == position[0] or y == position[1] or self.can_use_diagonal(position, (x, y))) and not self.collision.point_blocked(x, y)]
         
     def can_use_diagonal(self, a, b):
-        """
-        checks if an enemy can move diagonally without cutting through walls
-        makes sure both adjacent tiles are clear so no corner clipping
-
-        args:
-            a: starting position
-            b: destination position
-
-        returns:
-            true if diagonal movement is safe false if it would clip a wall
-
-        """
+        # checks if an enemy can move diagonally without cutting through walls
+        # makes sure both adjacent tiles are clear so no corner clipping
+        # args: a - starting position
+        #       b - destination position
+        # returns: true if diagonal movement is safe false if it would clip a wall
         return not self.collision.point_blocked(b[0], a[1]) and not self.collision.point_blocked(a[0], b[1])
 
     def get_cost(self, a, b):
-        """
-        calculates how expensive it is to move from one point to another
-        diagonal moves cost more and crowded areas get penalized
-        
-        args:
-            a: starting position
-            b: ending position
-            
-        returns:
-            cost value where lower is better
-          
-        """
+        # calculates how expensive it is to move from one point to another
+        # diagonal moves cost more and crowded areas get penalized
+        # args: a - starting position
+        #       b - ending position
+        # returns: cost value where lower is better
         base = 3 if a[0] == b[0] or a[1] == b[1] else 4
         crowding = self.pathfinding.get_point_usage(b)
 
         return base + crowding
 
     def trace_path(self, current, came_from):
-        """
-        works backwards from the goal to build the final path
-        follows the breadcrumb trail left by the a star algorithm
-
-        args:
-            current: the goal position we just reached
-            came_from: dictionary tracking how we got to each point
-
-        returns:
-            ordered list of coordinates from start to finish
-
-        """
+        # works backwards from the goal to build the final path
+        # follows the breadcrumb trail left by the a star algorithm
+        # args: current - the goal position we just reached
+        #       came_from - dictionary tracking how we got to each point
+        # returns: ordered list of coordinates from start to finish
         path = [ current ]
         while current in came_from:
             current = came_from[current]
@@ -374,14 +270,9 @@ class Path:
         return path
 
     def repair(self, point):
-        """
-        tries to fix a path when one of its points gets blocked by a turret
-        looks for alternate routes nearby or recalculates if necessary
-        
-        args:
-            point: the coordinates that are now blocked
-
-        """
+        # tries to fix a path when one of its points gets blocked by a turret
+        # looks for alternate routes nearby or recalculates if necessary
+        # args: point - the coordinates that are now blocked
         index = self.points.index(point)
 
         if index != 0 and index < len(self.points) - 1:
