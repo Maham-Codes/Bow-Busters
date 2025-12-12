@@ -6,21 +6,21 @@ import random
 
 class Pathfinding:
     """
-    manages pathfinding and path selection for enemies
+    handles pathfinding and path selection for all enemies in the game
 
-    keeps a pool of paths for use by enemies a path is randomly
-    selected for each enemy that is spawned if a path becomes blocked
-    it will be repaired or recalculated enemies can switch between 
-    paths to continue moving if their current path is being recalculated
+    maintains a pool of precalculated paths that enemies can follow
+    when an enemy spawns it gets assigned a random path from this pool
+    if a turret blocks part of a path the system will try to repair it
+    or recalculate a new route so enemies can keep moving
     """
 
     def __init__(self, game, collision):
         """
-        constructor
+        sets up the pathfinding system
 
         args:
-            game (Game): the game instance
-            collision (Collision): the collision manager instance
+            game: reference to the main game object
+            collision: handles collision detection for path validation
 
         """
         self.game = game
@@ -30,10 +30,10 @@ class Pathfinding:
 
     def precompute(self, count):
         """
-        starts precomputing a given number of paths
+        begins calculating paths in advance so theyre ready when enemies spawn
 
         args:
-            count (int): the number of paths to precompute
+            count: how many paths to generate for the pool
 
         """
         for i in range(count):
@@ -41,11 +41,11 @@ class Pathfinding:
 
     def find_start(self):
         """
-        finds a start point for a full length path
-        randomly picked taking collision into account
+        picks a random starting position on the right edge of the screen
+        makes sure the spot isnt blocked by checking collision
 
         returns:
-            (int, int): the start position
+            tuple with x and y coordinates for the start point
 
         """
         cells = self.collision.height
@@ -59,18 +59,19 @@ class Pathfinding:
             if not self.collision.point_blocked(x - 32, y):
                 return (x, y)
 
-        # no start found supply a default
+        # couldnt find clear spot so just pick any random position
         return (x, random.randint(0, cells - 1) * self.collision.tile_size)
 
     def get_point_usage(self, point):
         """
-        returns the number of existing paths that use the given point
+        counts how many paths go through a specific point
+        used to avoid crowding too many enemies on the same tiles
 
         args:
-            point (int, int): the point to check
+            point: the coordinates to check
 
         returns:
-            (int): the number of paths using the given point
+            number of paths that pass through this point
 
         """
         total = 0
@@ -83,8 +84,8 @@ class Pathfinding:
     
     def update(self):
         """
-        continues generating paths
-        run each frame
+        continues calculating any unfinished paths
+        call this every frame to gradually build up the path pool
         """
         for path in self.pool:
             if not path.done:
@@ -93,10 +94,11 @@ class Pathfinding:
 
     def get_path(self):
         """
-        picks a path for an enemy to follow
+        selects a random path from the pool for a newly spawned enemy
+        tries to find a completed path but will create a partial one if needed
 
         returns:
-            a random path (may still be generating)
+            a path object the enemy can follow
 
         """
         attempts = 500
@@ -112,46 +114,46 @@ class Pathfinding:
 
     def repair(self, point):
         """
-        called when a point has been blocked by a turret
-        triggers path repair and regeneration (if needed)
+        called when a player places a turret and blocks part of a path
+        tries to fix all affected paths or restarts their calculation
 
         args:
-            point (int, int): the point that is now blocked
+            point: the coordinates that just got blocked
 
         """
         for path in self.pool:
-            # repair paths that contain the point
+            # fix any completed paths that go through this blocked point
             if path.done and point in path.points:
                 path.repair(point)
 
-            # restart calculations of paths that may include the point
+            # restart any paths that were considering this point during calculation
             if not path.done and (point in path.open_set or point in path.closed_set):
                 path.start_search()
 
     def get_partial_path(self, point):
         """
-        gets or creates a path that starts or passes through the given point
-        used for enemies that are stuck due to a new turret placement
+        finds or creates a path that goes through a specific location
+        used when an enemy gets stuck and needs a new route from their current position
 
         args:
-            start (int, int): the point that the path must include
+            point: the coordinates where the enemy is currently located
 
         returns:
-            (Path), (int, int): the requested path and the point to move to whilst waiting
+            the path to follow and the immediate next position to move toward
 
         """
-        # try intersecting paths
+        # check if any existing path goes through this exact spot
         for path in self.pool:
             if (path.done and point in path.points) or path.start == point:
                 return path, point
 
-        # try paths that intersect with neighbours
+        # check if any path goes through a neighboring tile
         for neighbour in self.pool[0].get_neighbours(point):
             for path in self.pool:
                 if path.done and neighbour in path.points:
                     return path, neighbour
 
-        # no suitable path make a new one
+        # no existing path works so create a brand new one
         path = Path(self, point)
         self.pool.insert(0, path)
         self.partials += 1
@@ -159,13 +161,14 @@ class Pathfinding:
 
     def is_critical(self, point):
         """
-        works out if blocking the given point may make reaching the finish impossible
+        checks if blocking this point would make it impossible for enemies to reach the goal
+        prevents players from completely blocking all possible paths
         
         args:
-            point (int, int): the point to check
+            point: the coordinates to check
 
         returns:
-            true if the point must be kept clear otherwise returns false
+            true if blocking this would trap all enemies false if theres another way
 
         """
         for path in self.pool:
@@ -177,18 +180,19 @@ class Pathfinding:
 
 class Path:
     """
-    a single path across the level
-    calculated using the a star pathfinding algorithm across multiple frames
-    can be repaired if one of its points becomes blocked
+    represents one route from the right side of the screen to the left goal
+    uses a star algorithm to find the shortest path while avoiding obstacles
+    calculation happens gradually over multiple frames to avoid lag
+    can automatically fix itself when turrets block part of the route
     """
 
     def __init__(self, pathfinding, start):
         """ 
-        constructor
+        creates a new path starting from the given position
         
         args:
-            pathfinding (Pathfinding): the pathfinding manager instance
-            start (int, int): the start position of the path
+            pathfinding: reference to the main pathfinding manager
+            start: the coordinates where this path begins
         
         """
         self.start = start
@@ -200,16 +204,16 @@ class Path:
 
     def next(self, current):
         """
-        attempts to gets the next point in the path
+        gets the next waypoint an enemy should move toward
         
         args:
-            current (int, int): the current point
+            current: where the enemy is right now
 
         returns:
-            (int, int) if successful false if there are no more points in the path
+            the next coordinates to move to or false if we reached the end
 
         """
-        if current not in self.points: # this is the fully corrected line
+        if current not in self.points:
             return False
 
         index = self.points.index(current)
@@ -222,7 +226,7 @@ class Path:
 
     def start_search(self):
         """
-        restarts the pathfinding search
+        resets all variables and begins calculating the path from scratch
         """
         self.done = False
         self.closed_set = set()
@@ -232,31 +236,32 @@ class Path:
 
     def search(self):
         """
-        starts or continues an a star search for an apropriate path
+        runs a few iterations of the a star pathfinding algorithm
+        called repeatedly each frame until the path is complete
         """
         iterations = 25
         while len(self.open_set) > 0 and iterations > 0:
             iterations -= 1
 
-            # find the next node to evaluate
+            # pick the most promising point to explore next
             current, current_score = self.get_lowest_score(self.open_set, self.scores)
 
-            # check if it is a destination
+            # if we reached the left edge were done
             if current[0] < 0:
                 self.points = self.trace_path(current, self.came_from)
                 self.done = True
                 return
 
-            # remove from the open set
+            # mark this point as being explored
             self.open_set.remove(current)
 
-            # add to the closed set
+            # add to the list of already checked points
             self.closed_set.add(current)
 
-            # consider each neighbour
+            # look at all adjacent tiles
             for neighbour in self.get_neighbours(current):
 
-                # skip if already in the closed set
+                # dont recheck points weve already fully explored
                 if neighbour in self.closed_set:
                     continue
 
@@ -272,14 +277,15 @@ class Path:
 
     def get_lowest_score(self, open_set, scores):
         """
-        finds the point with the lowest score
+        finds which point in the open set has the best score
+        lower scores mean shorter estimated distance to goal
         
         args:
-            open_set (set(int, int)): a set of possible points
-            scores (list(int)): a list with the score of each position
+            open_set: all points we havent fully explored yet
+            scores: dictionary mapping each point to its calculated score
 
         returns:
-            ((int, int), int) the lowest scoring point and its score
+            the best point to explore next and its score value
 
         """
         lowest_score = 999999999
@@ -296,13 +302,14 @@ class Path:
 
     def get_neighbours(self, position):
         """
-        finds a list of neighbouring tiles for the given position
+        gets all tiles adjacent to the current position that arent blocked
+        includes diagonal movement if both intermediate tiles are clear
 
         args:
-            position (int, int): the start position
+            position: the coordinates to find neighbors for
 
         returns:
-            a list of (int, int) tuples
+            list of valid coordinates the enemy could move to next
 
         """
         if position[0] >= self.pathfinding.game.window.resolution[0]:
@@ -315,28 +322,30 @@ class Path:
         
     def can_use_diagonal(self, a, b):
         """
-        returns true if the diagonal between a and b is clear
+        checks if an enemy can move diagonally without cutting through walls
+        makes sure both adjacent tiles are clear so no corner clipping
 
         args:
-            a (int, int): position a
-            b (int, int): position b
+            a: starting position
+            b: destination position
 
         returns:
-            (bool) true if the diagonal is clear otherwise false
+            true if diagonal movement is safe false if it would clip a wall
 
         """
         return not self.collision.point_blocked(b[0], a[1]) and not self.collision.point_blocked(a[0], b[1])
 
     def get_cost(self, a, b):
         """
-        calculates the cost of moving between the given positions
+        calculates how expensive it is to move from one point to another
+        diagonal moves cost more and crowded areas get penalized
         
         args:
-            a (int, int): position a
-            b (int, int): position b
+            a: starting position
+            b: ending position
             
         returns:
-            (int) the cost of moving from a to b
+            cost value where lower is better
           
         """
         base = 3 if a[0] == b[0] or a[1] == b[1] else 4
@@ -346,14 +355,15 @@ class Path:
 
     def trace_path(self, current, came_from):
         """
-        traces a finished path from finish to start
+        works backwards from the goal to build the final path
+        follows the breadcrumb trail left by the a star algorithm
 
         args:
-            current (int, int): the last position in the path
-            came_from (dict): the location each position was reached from
+            current: the goal position we just reached
+            came_from: dictionary tracking how we got to each point
 
         returns:
-            (list(int, int)): a list of points in the path
+            ordered list of coordinates from start to finish
 
         """
         path = [ current ]
@@ -365,10 +375,11 @@ class Path:
 
     def repair(self, point):
         """
-        attempts to repair a path after a point is blocked
+        tries to fix a path when one of its points gets blocked by a turret
+        looks for alternate routes nearby or recalculates if necessary
         
         args:
-            point (int, int): the blocked point
+            point: the coordinates that are now blocked
 
         """
         index = self.points.index(point)
@@ -380,18 +391,18 @@ class Path:
             previous_neighbours = self.get_neighbours(previous)
             next_neighbours = self.get_neighbours(next)
 
-            # if next and previous are adjacent just remove the point
+            # easiest fix just connect the previous and next points directly
             if next in previous_neighbours:
                 self.points.remove(point)
                 return
 
-            # if not check for a common neighbour
+            # look for a single tile that connects both points
             for neighbour in previous_neighbours:
                 if neighbour in next_neighbours:
                     self.points[index] = neighbour
                     return
 
-            # if not check neighbours of neighbours
+            # try using two tiles to bridge the gap
             for neighbour in previous_neighbours:
                 for neighbour_neighbour in self.get_neighbours(neighbour):
                     if neighbour_neighbour in next_neighbours:
@@ -399,5 +410,5 @@ class Path:
                         self.points.insert(index + 1, neighbour_neighbour)
                         return
 
-        # no solution remake path
+        # couldnt find a simple fix so recalculate the whole path
         self.start_search()
