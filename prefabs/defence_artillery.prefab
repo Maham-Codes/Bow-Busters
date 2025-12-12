@@ -1,6 +1,6 @@
 
 # UI Settings
-display_name   :  str   :  Artillery
+display_name   :  str   :  BatCat
 
 # Sprite
 images  :  rotimg  :  textures\defence_artillery.png

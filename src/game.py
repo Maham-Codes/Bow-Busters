@@ -37,7 +37,7 @@ class Game:
         self.defence_type = 0
         self.defence_prototypes = [
             Defence(self, "defence_" + name, -100, -100)
-            for name in ["pillbox", "wall", "mines", "artillery"]
+            for name in ["pillbox", "wall", "mines", "BatCat"]
         ]
         
     def load_level(self, name):
