@@ -35,6 +35,12 @@ The game window will launch automatically.
 
 ---
 
+## 🔗 GitHub Profile
+
+ **Visit GitHub:** https://github.com/Maham-Codes/Bow-Busters
+
+---
+
 ## 📘 Detailed Project Description
 
 Bow Busters consists of multiple interacting modules, each representing a major game subsystem. Together they fulfill CS-250 requirements for modularity, algorithmic depth, and DSA application.
@@ -300,3 +306,4 @@ Efficient rendering & update system for all moving objects.
 A game that proves DSA can do more than pass exams — it can run worlds.
 
 Project wrapped. Algorithms behaved. THE END.
+
