@@ -302,8 +302,18 @@ Efficient rendering & update system for all moving objects.
 
 ---
 
+## 👥 Team Members
+ 
+- **Arham Fatima**
+- **Maham Mansoor** 
+- **Mehak Chaudhry** 
+- **Sumayya Emaan**
+
+---
+
 ## ✅ Conclusion
 A game that proves DSA can do more than pass exams — it can run worlds.
 
 Project wrapped. Algorithms behaved. THE END.
+
 
