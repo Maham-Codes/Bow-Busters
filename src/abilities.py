@@ -98,17 +98,25 @@ class AbilityManager:
             tiles = []
 
             # 8 top-heat tiles get spikes
-            top_tiles = heat.most_common(self.spike_count)
+            top_tiles = heat.most_common(self.spike_count * 2)  # Get more candidates to filter
 
             for (px, py), _ in top_tiles:
+                # Skip critical path tiles to avoid blocking enemies completely
+                if level.pathfinding.is_critical((px, py)):
+                    continue
+                
                 # Add prefab
-                p = Prefab("ability_spike", px, py)
+                p = Prefab("crystal_spike", px, py)
                 level.prefabs.add(p)
                 prefabs.append(p)
                 tiles.append((px, py))
 
                 # Block point
                 collision.block_point(px, py)
+                
+                # Stop once we have enough spikes
+                if len(tiles) >= self.spike_count:
+                    break
 
             self.active.append({
                 "name": name,

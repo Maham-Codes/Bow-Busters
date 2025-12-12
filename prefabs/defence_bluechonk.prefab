@@ -1,9 +1,9 @@
 
 # UI Settings
-display_name   :  str   :  Pillbox
+display_name   :  str   :  Chonk
 
 # Sprite
-images  :  rotimg  :  textures\defence_pillbox.png
+images  :  rotimg  :  textures\defence_bluechonk.png
 
 # Physics
 block  :  bool  :  1

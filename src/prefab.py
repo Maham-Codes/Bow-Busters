@@ -4,31 +4,26 @@ import pygame
 
 
 class Prefab(Sprite):
-    """ 
-    A prefab object.
-    Each prefab has a .prefab file containing variables loaded into the new prefab instance.   
-    """
+    # a game object loaded from a config file
+    # prefab files define properties like images stats and behavior
+    # each prefab type is cached so we only load it once
 
-    # Used to cache config files { name, config }
+    # stores loaded prefab configs so we dont reload them
     Cache = { }
 
     def __init__(self, name, x, y):
-        """ 
-        Constructor. 
-        
-        Args:
-            name (str): The config file name.
-            x (int): The top left x coordinate.
-            y (int): The top left y coordinate.
-
-        """
+        # creates a new prefab by loading its config file
+        # sets up position and initializes animations if needed
+        # args: name - prefab type to load
+        #       x - horizontal spawn position
+        #       y - vertical spawn position
         super().__init__()
 
         self.name = name
         self.config = self.load_config(name)
         self.apply_config(self.config)
 
-        # Handle animations
+        # set up animation system if this prefab has animated sprites
         if hasattr(self, "anim_source"):
             self.anim_change_time = self.anim_rate
             self.anim_index = 0
@@ -43,13 +38,9 @@ class Prefab(Sprite):
             self.rect = Rect(x, y, 32, 32)
 
     def update_animation(self, delta):
-        """
-        Updates any spritesheet animation on the prefab.
-
-        Args:
-            delta (float): The time since last frame.
-
-        """
+        # advances animation frames based on time
+        # loops or destroys object when animation finishes
+        # args: delta - time in seconds since last frame
         if hasattr(self, "anim_source"):
             self.anim_change_time -= delta
 
@@ -67,17 +58,11 @@ class Prefab(Sprite):
 
 
     def load_config(self, name):
-        """ 
-        Gets the config dictionary for the named prefab.
-
-        Args:
-            name (str): The name of the .prefab file to load.
-
-        Returns:
-            A name -> value dictionary of config variables.
-       
-        """
-        # Try cached version first.
+        # loads a prefab config file and parses all its properties
+        # caches the result so we dont reload the same file multiple times
+        # args: name - prefab filename without extension
+        # returns: dictionary of property names and values
+        # check if we already loaded this prefab before
         if name in Prefab.Cache.keys():
             return Prefab.Cache[name]
 
@@ -91,7 +76,7 @@ class Prefab(Sprite):
                     value = line[2].strip()
 
                     if type == "str":
-                        entries[key] = value
+                        entries[key] = value.replace("\\n", "\n")
                     elif type == "int":
                         entries[key] = int(value)
                     elif type == "float":
@@ -117,12 +102,8 @@ class Prefab(Sprite):
         return entries
 
     def apply_config(self, config):
-        """ 
-        Applies all config settings to the prefab instance.
-       
-        Args:
-            config (dict): A name:value list of variables to apply.
-
-        """
+        # takes all properties from config file and sets them on this object
+        # makes the prefab data become actual object attributes
+        # args: config - dictionary of property names and values
         for name in config.keys():
             setattr(self, name, config[name])
