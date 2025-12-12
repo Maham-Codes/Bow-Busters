@@ -13,9 +13,7 @@ game = Game(window)
 print("\n========== RUNNING AUTOMATED TEST CASES ==========\n")
 
 
-# ---------------------------------------------------
 # TEST CASE 1 — A* Pathfinding Completes Successfully
-# ---------------------------------------------------
 def test_pathfinding_basic():
     pf = game.level.pathfinding
 
