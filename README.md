@@ -37,7 +37,7 @@ The game window will launch automatically.
 
 ## 🔗 GitHub Profile
 
- **Visit GitHub:** https://github.com/Maham-Codes/Bow-Busters
+ **Jump to GitHub:** https://github.com/Maham-Codes/Bow-Busters
 
 ---
 
