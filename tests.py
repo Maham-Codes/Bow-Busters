@@ -33,7 +33,7 @@ def test_pathfinding_basic():
     for (x, y) in path.points:
         assert not game.level.collision.point_blocked(x, y), f"Blocked tile found in path at ({x},{y})"
 
-    print("✓ Test Case 1 Passed — Valid A* Path Generated")
+    print("Test Case 1 Passed — Valid A* Path Generated")
 
 
 # TEST CASE 2 — Collision Block/Unblock Works Correctly
@@ -48,7 +48,7 @@ def test_collision_block_unblock():
     col.unblock_point(x, y)
     assert not col.point_blocked(x, y), "Tile should be unblocked after unblock_point"
 
-    print("✓ Test Case 2 Passed — Collision System Working")
+    print("Test Case 2 Passed — Collision System Working")
 
 
 # TEST CASE 3 — Defence Target Suitability Logic (Guaranteed Pass)
@@ -80,7 +80,7 @@ def test_defence_targeting():
     chosen = d.get_target()
     assert chosen == enemy.rect.center, "Defence did not choose the correct enemy"
 
-    print("✓ Test Case 3 Passed — Defence Target Selection Works")
+    print("Test Case 3 Passed — Defence Target Selection Works")
 
 
 # TEST CASE 4 — Pathfinding Repair When Tile Blocked
@@ -111,7 +111,7 @@ def test_pathfinding_repair():
     assert repaired_path.done, "Repaired path did not complete"
     assert mid not in repaired_path.points, "Repaired path still contains blocked tile"
 
-    print("✓ Test Case 4 Passed — Pathfinding Repair Works")
+    print("Test Case 4 Passed — Pathfinding Repair Works")
 
 # TEST CASE 5 — Undo Stack Behavior
 def test_undo_stack():
@@ -127,7 +127,7 @@ def test_undo_stack():
     assert popped["name"] == "d3", "Undo should remove most recent purchase"
     assert len(game.purchase_history) == 2, "Stack size should decrease by 1"
 
-    print("✓ Test Case 5 Passed — Undo Stack Works (LIFO)")
+    print("Test Case 5 Passed — Undo Stack Works (LIFO)")
 
 # RUN ALL TESTS
 test_pathfinding_basic()
