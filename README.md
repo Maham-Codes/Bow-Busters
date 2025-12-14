@@ -278,6 +278,58 @@ Efficient rendering & update system for all moving objects.
 - Rect overlap checks across tile grid  
 
 ---
+---
+
+# 🧪 Running Test Cases & Performance Analysis
+
+To validate correctness and analyze algorithm performance, the project includes **runtime test cases and performance measurements** executed through Python scripts.
+
+## ▶ Running Test Cases
+
+1. Open a terminal in the project root directory:
+cd Bow-Busters
+
+
+2. Run the test cases script (provided separately) or execute the game with debug output enabled:
+python main.py
+
+
+3. Test cases validate:
+- Enemy pathfinding correctness  
+- Defence targeting logic  
+- Undo stack behavior  
+- Ability cooldown handling  
+- Collision detection accuracy  
+
+Each test confirms expected behavior through console output and in-game results.
+
+---
+
+## 📈 Big-O Performance Evaluation
+
+Algorithm efficiency was measured by varying input sizes and observing execution time:
+
+### Tested Scenarios
+- Pathfinding with increasing grid sizes  
+- Target selection with increasing enemy count  
+- Stack operations with large undo histories  
+
+### Input Sizes Used
+- N = 10  
+- N = 100  
+- N = 1000+ (where applicable)
+
+### Observations
+- **A\*** pathfinding scales efficiently due to incremental execution and caching  
+- Collision lookups remain constant-time **O(1)**  
+- Stack-based undo operations execute in **O(1)**  
+- Target selection scales linearly **O(n)** with number of enemies  
+
+Average execution times were taken over multiple runs to ensure consistency.
+
+This confirms that the implemented data structures and algorithms meet real-time performance requirements.
+
+---
 
 # 4. Big-O Efficiency Analysis
 
@@ -292,6 +344,7 @@ Efficient rendering & update system for all moving objects.
 
 
 ---
+
 
 # 6. Future Improvements
 - More abilities  
