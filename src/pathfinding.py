@@ -128,14 +128,14 @@ class Pathfinding:
 
 
 class Path:
-    # represents one route from the right side of the screen to the left goal
-    # uses a star algorithm to find the shortest path while avoiding obstacles
-    # calculation happens gradually over multiple frames to avoid lag
-    # can automatically fix itself when turrets block part of the route
+    #represents one route from the right side of the screen to the left goal
+    #uses a star algorithm to find the shortest path while avoiding obstacles
+    #calculation happens gradually over multiple frames to avoid lag
+    #can automatically fix itself when turrets block part of the route
 
     def __init__(self, pathfinding, start):
-        # creates a new path starting from the given position
-        # args: pathfinding - reference to the main pathfinding manager
+        #creates a new path starting from the given position
+        #args: pathfinding - reference to the main pathfinding manager
         #       start - the coordinates where this path begins
         self.start = start
         self.pathfinding = pathfinding
