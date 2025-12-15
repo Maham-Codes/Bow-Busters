@@ -1,6 +1,6 @@
 #  Bow Busters
 
-## 🎮 Introduction
+## Introduction
 **Bow Busters** is a fast-paced, strategic action game built using **Python** and **Pygame**.  
 Your goal is to survive as long as possible by placing defensive structures, activating abilities, and reacting to intelligent enemy behavior.
 
@@ -15,7 +15,7 @@ Enemies navigate using intelligent pathfinding, dynamically rerouting when the p
 
 ---
 
-## 🚀 How to Run the Project
+## How to Run the Project
 
 ### 1. Install Python  
 Requires **Python 3.10+**
@@ -35,13 +35,13 @@ The game window will launch automatically.
 
 ---
 
-## 🔗 GitHub Profile
+## GitHub Profile
 
  **Jump to GitHub:** https://github.com/Maham-Codes/Bow-Busters
 
 ---
 
-## 📘 Detailed Project Description
+## Detailed Project Description
 
 Bow Busters consists of multiple interacting modules, each representing a major game subsystem. Together they fulfill CS-250 requirements for modularity, algorithmic depth, and DSA application.
 
@@ -50,7 +50,7 @@ Bow Busters consists of multiple interacting modules, each representing a major 
 # 1. Functional Modules
 
 
-## ⚙️ Game Engine & Main Loop
+##  Game Engine & Main Loop
 **Module:** `game`
 
 Handles all per-frame operations:
@@ -68,7 +68,7 @@ Acts as the central orchestrator connecting all modules.
 
 ---
 
-## 🗺️ Level System
+## Level System
 **Module:** `level`
 
 - Loads `.level` files  
@@ -79,7 +79,7 @@ Acts as the central orchestrator connecting all modules.
 
 ---
 
-## 🧭 Pathfinding Engine (A*)
+## Pathfinding Engine (A*)
 **Module:** `pathfinding`
 
 A key component of the game.
@@ -97,7 +97,7 @@ Enables enemies to always find valid and efficient movement paths.
 
 ---
 
-## 👾 Enemy AI System
+## Enemy AI System
 **Module:** `enemy`
 
 Enemy capabilities:
@@ -110,7 +110,7 @@ Enemy capabilities:
 
 ---
 
-## 🛡️ Defence System
+## Defence System
 **Module:** `defence`
 
 Defence structures:
@@ -123,7 +123,7 @@ Defence structures:
 
 ---
 
-## 🧱 Prefab System (Config-Based Object Loader)
+## Prefab System (Config-Based Object Loader)
 **Module:** `prefab`
 
 - Loads object configurations from `.prefab` files  
@@ -134,7 +134,7 @@ Defence structures:
 
 ---
 
-## 🎯 Projectile & Explosion System
+## Projectile & Explosion System
 **Modules:** `bullet`, `explosion`
 
 System provides:
@@ -147,7 +147,7 @@ System provides:
 
 ---
 
-## ⚡ Ability System
+## Ability System
 **Module:** `abilities`
 
 Example: **Crystal Spike**
@@ -160,7 +160,7 @@ Example: **Crystal Spike**
 
 ---
 
-## 🧱 Collision System
+## Collision System
 **Module:** `collision`
 
 - Tile-based grid representation  
@@ -171,7 +171,7 @@ Example: **Crystal Spike**
 
 ---
 
-## 🌊 Wave System
+## Wave System
 **Module:** `wave`
 
 - Spawns enemies of varying size  
@@ -181,7 +181,7 @@ Example: **Crystal Spike**
 
 ---
 
-## 🧩 Menu & UI System
+## Menu & UI System
 **Module:** `menu`
 
 Includes:
@@ -196,7 +196,7 @@ Includes:
 
 ---
 
-## 🏆 Local Leaderboard System
+## Local Leaderboard System
 **Module:** `leaderboard`
 
 - Stores data in JSON  
@@ -210,7 +210,7 @@ Includes:
 
 Bow Busters uses **far more** than the required three DSA structures.  
 
-## ✔ Lists
+## Lists
 Used for:
 - Paths  
 - Enemies  
@@ -219,7 +219,7 @@ Used for:
 - Level tile data  
 - Wave spawning queues  
 
-## ✔ Dictionaries (Hash Maps)
+## Dictionaries (Hash Maps)
 Used for:
 - Prefab configuration  
 - Ability cooldowns  
@@ -227,64 +227,64 @@ Used for:
 - UI attributes  
 - Leaderboard entries  
 
-## ✔ Sets
+## Sets
 Used for:
 - A* open/closed sets  
 - Blocked tiles  
 - Unique crystal spike locations  
 
-## ✔ Stacks
+## Stacks
 Undo system via **LIFO purchase_history**
 
-## ✔ Grid / Tile Map
+## Grid / Tile Map
 Collision system:
 
 - Constant-time tile checks  
 - Multi-tile blocking  
 
-## ✔ Priority-like Logic
+## Priority-like Logic
 A* uses scoring logic similar to a priority queue.
 
-## ✔ Caches
+## Caches
 Prefab cache prevents redundant file loads.
 
-## ✔ JSON Data Structures
+## JSON Data Structures
 Leaderboard stores list of dict entries.
 
-## ✔ Sprite Groups (Pygame)
+## Sprite Groups (Pygame)
 Efficient rendering & update system for all moving objects.
 
 ---
 
 # 3. Algorithms Used
 
-## 🧠 A* Pathfinding
+## A* Pathfinding
 - Dynamic + incremental  
 - Auto-repairing  
 - Partial path support  
 - Multi-frame calculation  
 
-## 🎯 Greedy Target Selection
+## Greedy Target Selection
 - Defences target nearest enemy in range (O(n))
 
-## 💥 Damage Falloff
+## Damage Falloff
 - Explosion damage ∝ inverse squared distance
 
-## 🔁 Undo Operation (Stack)
+## Undo Operation (Stack)
 - Latest defence placement removed first
 
-## 🧩 Collision Detection
+## Collision Detection
 - O(1) tile lookup  
 - Rect overlap checks across tile grid  
 
 ---
 ---
 
-# 🧪 Running Test Cases & Performance Analysis
+# Running Test Cases & Performance Analysis
 
 To validate correctness and analyze algorithm performance, the project includes **runtime test cases and performance measurements** executed through Python scripts.
 
-## ▶ Running Test Cases
+## Running Test Cases
 
 1. Open a terminal in the project root directory:
 cd Bow-Busters
@@ -305,7 +305,7 @@ Each test confirms expected behavior through console output and in-game results.
 
 ---
 
-## 📈 Big-O Performance Evaluation
+## Big-O Performance Evaluation
 
 Algorithm efficiency was measured by varying input sizes and observing execution time:
 
@@ -355,7 +355,7 @@ This confirms that the implemented data structures and algorithms meet real-time
 
 ---
 
-## 👥 Team Members
+## Team Members
  
 - **Arham Fatima**
 - **Maham Mansoor** 
@@ -364,9 +364,7 @@ This confirms that the implemented data structures and algorithms meet real-time
 
 ---
 
-## ✅ Conclusion
+## Conclusion
 A game that proves DSA can do more than pass exams — it can run worlds.
 
 Project wrapped. Algorithms behaved. THE END.
-
-
