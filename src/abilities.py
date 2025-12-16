@@ -98,14 +98,17 @@ class AbilityManager:
             tiles = []
 
             # 8 top-heat tiles get spikes
+            #heat is counter(dict) and will choose which tiles to block from the paths MOSTLY used by the enemies
+            # randomly select nahi karay ga
             top_tiles = heat.most_common(self.spike_count * 2)  # Get more candidates to filter
 
             for (px, py), _ in top_tiles:
-                # Skip critical path tiles to avoid blocking enemies completely
+                #Skip critical path tiles to avoid blocking enemies completely,this will jeep the game fairr,not supporting only the protectors
                 if level.pathfinding.is_critical((px, py)):
                     continue
                 
                 # Add prefab
+                # visulaization is importanttt-is kay bagair humain nazar nahi ae ga but still blocking hogi
                 p = Prefab("crystal_spike", px, py)
                 level.prefabs.add(p)
                 prefabs.append(p)
@@ -115,9 +118,11 @@ class AbilityManager:
                 collision.block_point(px, py)
                 
                 # Stop once we have enough spikes
+                # Over-blocking nahi hogi
                 if len(tiles) >= self.spike_count:
                     break
 
+            # this is a MEMORY- it remembers kay kon si temp block hen kon say visuals bad may remove karnay hen
             self.active.append({
                 "name": name,
                 "time_left": self.spike_duration,
