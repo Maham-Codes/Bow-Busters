@@ -3,7 +3,7 @@ import random
 import pygame
 from src.prefab import Prefab
 
-
+#prefabs seperates configuration from logic
 class Explosion(Prefab):
     # represents an explosion effect that damages nearby enemies
     # uses an animated sprite and calculates damage based on distance
@@ -24,11 +24,15 @@ class Explosion(Prefab):
        # check every enemy to see if theyre in blast radius
        for enemy in game.wave.enemies:
             # calculate distance squared to avoid expensive sqrt
+            #-----------EUCLIDEAN DISTANCE----------------
+            #jo qareeb hon gay un ko damage karay ga
+            #jo dur hon gay un ko IGNOREE
             dx = enemy.rect.centerx-self.rect.centerx
             dy = enemy.rect.centery-self.rect.centery
             magnitude = (dx ** 2) + (dy ** 2)
 
             # if enemy is close enough deal damage that decreases with distance
+            #itna qareeb hoga enemy utna hi damage ae ga
             if magnitude < max_magnitude:
                 enemy.take_damage(damage * (1 - (magnitude / max_magnitude)))
 
