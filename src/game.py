@@ -28,7 +28,7 @@ class Game:
         
         # initialize game state
         self.purchase_history = []        # stack of recent defences
-        self.music_on = True   # music starts enabled
+        self.music_on = True   # music will start khud ba khud, then we can just turn it off,our choice
 
         # load the starting level
         self.load_level("path")
@@ -181,9 +181,10 @@ class Game:
         self.level.money += entry.get("cost", 0)
         
     def toggle_music(self):
-        # turns background music on or off
+        # turns background music on or off-toggling
         self.music_on = not self.music_on
 
+        # music on hoga to volume 0.5 warna 0, not using stop aur pause wali cheez-making things easier
         if self.music_on:
             pygame.mixer.music.set_volume(0.5)
         else:
