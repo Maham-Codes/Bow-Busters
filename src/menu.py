@@ -1,5 +1,5 @@
-from core.prefab import Prefab
-from core.leaderboard import Leaderboard
+from src.prefab import Prefab
+from src.leaderboard import Leaderboard
 from pygame.sprite import OrderedUpdates
 import pygame
 import math
@@ -13,9 +13,9 @@ _TROPHY_CACHE = [None, None, None]
 
 
 def _load_trophy_texture(filename):
-    """
-    Loads and scales a trophy texture located inside textures/.
-    """
+    # loads a trophy icon image from the textures folder
+    # scales it to the right size for display in the leaderboard
+    # args: filename - name of the trophy image file
     path = os.path.join(LEADERBOARD_ASSET_DIR, filename)
     if not os.path.exists(path):
         print(f"Warning: missing leaderboard trophy asset '{filename}' in textures/")
@@ -31,9 +31,9 @@ def _load_trophy_texture(filename):
         
 
 def _get_trophy_surface(index):
-    """
-    Lazily loads and caches trophy surfaces (to avoid convert_alpha before display init).
-    """
+    # gets a trophy icon for the leaderboard top 3 players
+    # loads and caches them so we dont reload every time
+    # args: index - which trophy to get (0=gold 1=silver 2=bronze)
     if index < 0 or index >= len(TROPHY_FILENAMES):
         return None
     cached = _TROPHY_CACHE[index]
@@ -44,18 +44,12 @@ def _get_trophy_surface(index):
 
 
 class Menu(Prefab):
-    """
-    Controls the menu system.
-    """
+    # manages all the menus in the game
+    # handles main menu pause screen leaderboard and game over screens
 
     def __init__(self, game):
-        """
-        Constructor.
-
-        Args:
-            game (Game): The game instance.
-
-        """
+        # sets up the menu system with leaderboard and buttons
+        # args: game - reference to the main game object
         super().__init__("menu", 0, 0)
 
         self.game = game
@@ -69,20 +63,17 @@ class Menu(Prefab):
         self.ability_buttons = []
         
     def show(self):
-        """
-        Shows the menu.
-        """
+        # displays the menu and pauses the game
         self.visible = True
         self.show_main_screen()
 
     def hide(self):
-        """
-        Hides the menu and enables in game icons.
-        """
+        # closes the menu and shows the in game ui instead
+        # creates tower selection buttons and stat displays
         self.visible = False
         self.clear()
 
-        # defence buttons (left bar)
+        # create tower selection buttons along the left side
         self.defence_buttons = [
             MenuButton(
                 self,
@@ -96,7 +87,7 @@ class Menu(Prefab):
         ]
         self.components.add(self.defence_buttons)
 
-        # ability buttons (right bar)
+        # create special ability buttons on the right side
         self.ability_buttons = [
             MenuButton(self, "menu_pause_button", "Spike", 960, 0, lambda: self.game.abilities.use("crystal_spike")),
             MenuButton(self, "menu_pause_button", "Undo", 960, 64, self.game.undo_last_purchase),
@@ -118,17 +109,14 @@ class Menu(Prefab):
         self.update()
 
     def clear(self):
-        """
-        Removes all components from the menu.
-        """
+        # removes all buttons and labels from the current menu screen
+        # called when switching between different menu screens
         self.components.remove(self.components)
         self.component_next = self.top
-        # no undo_button here anymore
 
     def update(self):
-        """
-        Called each frame.
-        """
+        # runs every frame to update ui text and button states
+        # updates wave count lives money and tower availability
         if not self.visible:
             self.wave_label.set_text("Wave: " + str(self.game.wave.number))
             self.lives_label.set_text("Lives: " + str(self.game.level.lives))
@@ -136,41 +124,37 @@ class Menu(Prefab):
             self.money_label.set_text("Money: " + str(self.game.level.money))
             self.score_label.set_text("Score: " + str(self.game.level.get_score()))
 
+            # disable tower buttons that cost too much money
             for i in range(len(self.defence_buttons)):
                 self.defence_buttons[i].disabled = (self.game.defence_prototypes[i].cost > self.game.level.money)
                 self.defence_buttons[i].selected = (self.game.defence_type == i)
 
         self.components.update()
         
-        # --- update ability buttons ---
+        # update ability button cooldowns and availabilitys and availability
         for btn in getattr(self, "ability_buttons", []):
             if btn.text.startswith("Spike"):
+                # check if spike ability is ready and show cooldown timer
                 ready = self.game.abilities.is_ready("crystal_spike")
                 btn.disabled = not ready
                 cd = self.game.abilities.get_cooldown("crystal_spike")
                 btn.set_text("Spike" if cd <= 0 else "Spike ({:.1f})".format(cd))
             elif btn.text == "Undo":
+                # disable undo button if no towers have been placed
                 has_history = len(self.game.purchase_history) > 0
                 btn.disabled = not has_history
-                # keep text as "Undo"
 
 
     def clicked(self):
-        """
-        Called when a mouse button is pressed.
-        """
+        # handles mouse clicks by checking all buttons
         for component in self.components:
             if isinstance(component, MenuButton):
                 component.clicked()
 
     def key_pressed(self, key):
-        """
-        Called when a key has been pressed.
-
-        Args:
-            key: The key that was pressed.
-
-        """
+        # handles keyboard input for typing player names
+        # only works when entering a name on the leaderboard screen
+        # args: key - which key was pressed
         if self.leaderboard_name is None:
             return
 
@@ -186,37 +170,26 @@ class Menu(Prefab):
             self.leaderboard_name.set_text(self.leaderboard_name.text[:-1])
 
     def draw(self, screen):
-        """
-        Draws the menu and its components.
-
-        Args:
-            screen (Surface): The surface that is blitted to.
-
-        """
+        # renders the menu background and all buttons to the screen
+        # args: screen - pygame surface to draw on
         if self.visible:
             screen.blit(self.image, (0, 0))
 
         self.components.draw(screen)
 
     def add_button(self, text, callback, tint=None, icon=None, left_align=False, text_colour=None):
-        """
-        Adds a standard button to the menu screen.
-
-        Args:
-            text (str): The text to display on the button.
-            callback (callable): The callback when the button is clicked.
-            tint (tuple|None): Optional (R, G, B) tint colour for the button background.
-            icon (Surface|None): Optional icon surface to render before the text.
-            left_align (bool): If True, text is left-aligned instead of centred.
-            text_colour (tuple|None): Optional (R, G, B) text colour override.
-
-        Returns:
-            (MenuButton): The button.
-
-        """
+        # creates a new button and adds it to the current menu screen
+        # can customize colors icons and alignment for special buttons
+        # args: text - what to display on the button
+        #       callback - function to call when clicked
+        #       tint - optional background color
+        #       icon - optional image to show
+        #       left_align - align text left instead of center
+        #       text_colour - optional text color
+        # returns: the created button
         button = MenuButton(self, "menu_button", text, 0, self.component_next, callback)
 
-        # Per-button layout / style customisation (used by leaderboard)
+        # apply custom styling if any options were provided
         customised = False
         if left_align:
             button.left_align = True
@@ -225,13 +198,14 @@ class Menu(Prefab):
             button.text_colour_override = text_colour
             customised = True
 
-        # Optionally customise the button background/icon (used by leaderboard)
+        # apply background color tint or icon if specified
         if tint is not None:
             button.tint = tint
             customised = True
         if icon is not None:
             button.icon_surface = icon
             customised = True
+        # rebuild button image if we changed anything
         if customised:
             img = button.image_template
             button.image_template = None
@@ -245,13 +219,8 @@ class Menu(Prefab):
         return button
 
     def add_level_button(self, level):
-        """
-        Adds a change level button to the menu screen.
-
-        Args:
-            level (str): The name of the level to display on the button.
-
-        """
+        # creates a button for switching to a different level
+        # args: level - name of the level to load when clicked
         button = MenuButton(self, "menu_level_" + level, level, 0, self.component_next, lambda: self.game.load_level(level))
         button.rect.x = (self.rect.width - button.rect.width) / 2
         
@@ -260,10 +229,9 @@ class Menu(Prefab):
         self.component_next += button.padding
 
     def show_main_screen(self):
-        """
-        Shows the main menu screen.
-        """
+        # displays the main menu with start continue and settings options
         self.clear()
+        self.add_button("Music: " + ("ON" if self.game.music_on else "OFF"), self.toggle_music_button)
 
         if self.game.level.time > 0:
             self.add_button("Continue", self.hide)
@@ -277,9 +245,7 @@ class Menu(Prefab):
         self.add_button("Quit Game", self.game.quit)
 
     def show_how_to_play_screen(self):
-        """
-        Shows the how to play menu screen.
-        """
+        # displays instructions on how to play the game
         self.clear()
         self.add_button("Back", self.show_main_screen)
 
@@ -288,9 +254,7 @@ class Menu(Prefab):
         instructions.rect.x = (self.rect.width - instructions.rect.width) / 2
 
     def show_change_level_screen(self):
-        """
-        Shows the change level screen.
-        """
+        # shows buttons to switch to different available levels
         self.clear()
         self.add_button("Back", self.show_main_screen)
 
@@ -304,9 +268,8 @@ class Menu(Prefab):
             self.add_level_button("maze")
 
     def show_leaderboard_screen(self):
-        """
-        Shows the leaderboard screen.
-        """
+        # displays the high score leaderboard with player names and scores
+        # top 3 get special purple styling and trophy icons
         self.leaderboard.retrieve()
         self.clear()
         self.add_button("Back", self.show_main_screen)
@@ -318,20 +281,20 @@ class Menu(Prefab):
         elif len(self.leaderboard.entries) == 0:
             self.add_button("No scores yet", None)
         else:
-            # Show all entries with only name and score.
-            # Top 3 get special purple styling & trophies.
+            # display all scores with player names
+            # give top 3 players fancy purple colors and trophy icons
             for index, entry in enumerate(self.leaderboard.entries):
                 text = entry.name + " - " + str(entry.score)
 
-                # Default styling for non-top-3
+                # default colors for most players
                 tint = None
                 text_colour = None
                 icon = _get_trophy_surface(index)
 
+                # special styling for gold silver bronze winners
                 if index < 3:
-                    # Dark purple background, light purple text for top 3
-                    tint = (60, 20, 90)        # dark purple
-                    text_colour = (230, 210, 255)  # light purple
+                    tint = (60, 20, 90)
+                    text_colour = (230, 210, 255)
 
                 self.add_button(
                     text,
@@ -343,10 +306,9 @@ class Menu(Prefab):
                 )
 
     def show_lose_screen(self):
-        """
-        Shows the game over screen and automatically adds score to leaderboard.
-        """
-        # Automatically add score for current player
+        # displays game over screen when player loses all lives
+        # automatically saves the score to the leaderboard
+        # save score for the current player
         current_score = self.game.level.get_score()
         current_wave = self.game.wave.number
         current_level = self.game.level.name
@@ -361,9 +323,8 @@ class Menu(Prefab):
         self.add_button("Restart Game", lambda: self.game.load_level(current_level))
 
     def show_enter_player_screen(self):
-        """
-        Shows the enter player name screen.
-        """
+        # shows a screen where player can type their name
+        # used for tracking scores on the leaderboard
         self.clear()
         self.add_button("Enter Player Name", None)
         self.leaderboard_name = self.add_button("", None)
@@ -371,9 +332,7 @@ class Menu(Prefab):
         self.add_button("Back", self.show_leaderboard_screen)
 
     def submit_player_name(self):
-        """
-        Sets the player name for tracking.
-        """
+        # saves the typed player name and returns to leaderboard
         if self.leaderboard_name and self.leaderboard_name.text != "":
             self.leaderboard.set_player(self.leaderboard_name.text)
             self.show_leaderboard_screen()
@@ -381,37 +340,33 @@ class Menu(Prefab):
             self.show_leaderboard_screen()
 
     def show_add_to_leaderboard_screen(self):
-        """
-        Shows the add to leaderboard screen (deprecated - now automatic).
-        """
-        # This method is kept for backward compatibility but scores are now added automatically
+        # old method kept for compatibility but not used anymore
+        # scores are added automatically now
         self.show_lose_screen()
 
     def submit_leaderboard(self):
-        """
-        Attempts to submit a score to the leaderboard (deprecated - now automatic).
-        """
-        # This method is kept for backward compatibility but scores are now added automatically
+        # old method kept for compatibility but not used anymore
+        # scores are added automatically now
         pass
+    
+    def toggle_music_button(self):
+        # turns music on or off and updates the menu button text
+        self.game.toggle_music()
+        self.show_main_screen()
+
 
 
 class MenuLabel(Prefab):
-    """
-    A label displayed by the menu system. Contains a background.
-    """
+    # a text display with a background used in menus
+    # shows information like wave count lives and money
 
     def __init__(self, menu, type, text, x, y):
-        """
-        Constructor.
-
-        Args:
-            menu (Menu): The menu instance.
-            type (str): The prefab name, used for font and background.
-            text (str): The text to display on the button.
-            x (int): The x position.
-            y (int): The y position.
-
-        """
+        # creates a new label with text and background
+        # args: menu - reference to the menu system
+        #       type - prefab name for styling
+        #       text - what to display
+        #       x - horizontal position
+        #       y - vertical position
         super().__init__(type, x, y)
 
         self.text = text
@@ -419,7 +374,7 @@ class MenuLabel(Prefab):
         self.highlighted = False
         self.selected = False
         self.disabled = False
-        # Optional, used by leaderboard buttons
+        # optional styling used by fancy leaderboard buttons
         self.tint = None
         self.icon_surface = None
         self.left_align = False
@@ -430,9 +385,8 @@ class MenuLabel(Prefab):
         self.rect.y = y
         
     def update(self):
-        """
-        Called each frame. Looks for mouse presses over the button.
-        """
+        # runs every frame to change appearance based on state
+        # shows different images for disabled highlighted or normal
         if self.disabled:
             self.set_image(self.image_d)
         elif self.highlighted or self.selected:
@@ -441,13 +395,8 @@ class MenuLabel(Prefab):
             self.set_image(self.image_s)
 
     def set_text(self, text):
-        """
-        Sets the text on the label.
-
-        Args:
-            text (str): The new text to display.
-
-        """
+        # changes the text displayed on the label
+        # args: text - new text to show
         if self.text != text:
             self.text = text
             
@@ -456,45 +405,37 @@ class MenuLabel(Prefab):
             self.set_image(img)
 
     def set_image(self, image):
-        """
-        Sets the background image to the given surface.
-        
-        Args:
-            image (Surface): The image to use.
-
-        """
+        # changes the background image of the label
+        # applies tinting if needed and renders text on top
+        # args: image - pygame surface to use as background
         if self.image_template == image:
             return
 
         self.image_template = image
 
         if hasattr(self, "font"):
-            # Start from a copy of the base image
+            # make a copy so we dont modify the original
             base = image.copy()
 
-            # Apply optional tint first (used for coloured leaderboard rows)
+            # apply color tint for special buttons like leaderboard entries
             tint = getattr(self, "tint", None)
             if tint is not None:
-                # Overlay a semi-transparent tint to keep prefab shading intact
+                # add semi transparent color overlay
                 tint_surface = pygame.Surface(base.get_size(), pygame.SRCALPHA)
-                tint_surface.fill((*tint, 140))  # 0-255 alpha, 140 keeps highlight subtle
+                tint_surface.fill((*tint, 140))
                 base.blit(tint_surface, (0, 0))
 
-            # Render text on top
+            # draw the text on top of the background
             self.image = base
             self.render_text(self.image)
         else:
             self.image = image
            
     def render_text(self, background):
-        """
-        Renders the button's text to the given background surface.
-
-        Args:
-            background (Surface): The surface to be rendered to.
-
-        """
-        # Base text colour from prefab, overridable per button
+        # draws the text and optional icon onto the button background
+        # handles alignment and positioning
+        # args: background - surface to draw on
+        # use default color or custom color if specified
         colour = (self.col_r, self.col_g, self.col_b)
         override = getattr(self, "text_colour_override", None)
         if override is not None:
@@ -525,41 +466,31 @@ class MenuLabel(Prefab):
 
 
 class MenuButton(MenuLabel):
-    """
-    A menu label that responds to being clicked.
-    """
+    # a clickable button that can trigger actions when pressed
+    # extends menulabel with mouse interaction
 
     def __init__(self, menu, type, text, x, y, callback):
-        """
-        Constructor.
-
-        Args:
-            menu (Menu): The menu instance.
-            type (str): The prefab name, used for font and background.
-            text (str): The text to display on the button.
-            x (int): The x position.
-            y (int): The y position.
-            callback (callable): The callback triggered when the button is pressed.
-
-        """
+        # creates a clickable button
+        # args: menu - reference to menu system
+        #       type - prefab name for styling
+        #       text - button label
+        #       x - horizontal position
+        #       y - vertical position
+        #       callback - function to call when clicked
         super().__init__(menu, type, text, x, y)
 
         self.callback = callback
         self.last_pressed = True
 
     def update(self):
-        """
-        Called each frame. Looks for mouse presses over the button.
-        """
+        # runs every frame to check if mouse is hovering over button
         hover = self.rect.collidepoint(pygame.mouse.get_pos())
         self.highlighted = hover and self.callback is not None
 
         super().update()
 
     def clicked(self):
-        """
-        Called whenever the mouse is clicked.
-        """
+        # checks if button was clicked and triggers its callback function
         hover = self.rect.collidepoint(pygame.mouse.get_pos())
 
         if hover and self.callback is not None:

@@ -1,9 +1,9 @@
 
 # UI Settings
-display_name   :  str   :  Artillery
+display_name   :  str   :  BatCat
 
 # Sprite
-images  :  rotimg  :  textures\defence_artillery.png
+images  :  rotimg  :  textures\defence_batcat.png
 
 # Physics
 block  :  bool  :  1
