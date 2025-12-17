@@ -1,7 +1,5 @@
 ###########################################
-#
-# Local Leaderboard Replacement (robust)
-#
+# Leaderboard 
 ###########################################
 
 import json
